@@ -8,7 +8,6 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          // Sidebar
           Container(
             width: 200,
             color: Colors.green.shade400,
