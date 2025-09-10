@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset("assets/badminton_logo.png", height: 150),
+                  Image.asset("assets/images/logo.jpg", height: 300),
                   const SizedBox(height: 20),
                   const Text(
                     "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
           Expanded(
             flex: 1,
             child: Container(
-              color: const Color(0xFF4CAF50),
+              color: const Color.fromARGB(255, 76, 175, 145),
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.all(30),
