@@ -12,6 +12,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
   final TextEditingController nomorController = TextEditingController();
   final TextEditingController hargaController = TextEditingController();
 
+  // List untuk menampung data lapangan
+  final List<Map<String, dynamic>> _lapanganList = [];
+
   void _simpanLapangan() {
     final nama = namaController.text;
     final nomor = nomorController.text;
@@ -24,11 +27,13 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
       return;
     }
 
-    // Simulasi simpan (di backend/local storage nanti)
-    print("Lapangan Disimpan:");
-    print("Nama: $nama");
-    print("Nomor: $nomor");
-    print("Harga: $harga");
+    setState(() {
+      _lapanganList.add({
+        "nama": nama,
+        "nomor": nomor,
+        "harga": harga,
+      });
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Lapangan berhasil disimpan.")),
@@ -45,54 +50,121 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     hargaController.clear();
   }
 
+  void _hapusLapangan(int index) {
+    setState(() {
+      _lapanganList.removeAt(index);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Lapangan berhasil dihapus.")),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.green.shade100),
-        borderRadius: BorderRadius.circular(8),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Form Input
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.green.shade100),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Tambah Data Lapangan",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 30),
+                _formField("Nama Lapangan:", namaController),
+                const SizedBox(height: 20),
+                _formField("Nomor Lapangan:", nomorController),
+                const SizedBox(height: 20),
+                _formField("Harga Perjam:", hargaController,
+                    inputType: TextInputType.number),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _simpanLapangan,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color.fromARGB(255, 76, 175, 80),
+                      ),
+                      child: const Text(
+                        "Simpan",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: _batalInput,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: const Text(
+                        "Batal",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
+
+          // Tabel Data Lapangan
           const Text(
-            "Tambah Data Lapangan",
+            "Daftar Lapangan",
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 30),
-          _formField("Nama Lapangan:", namaController),
           const SizedBox(height: 20),
-          _formField("Nomor Lapangan:", nomorController),
-          const SizedBox(height: 20),
-          _formField("Harga Perjam:", hargaController, inputType: TextInputType.number),
-          const SizedBox(height: 30),
-          Row(
-            children: [
-              ElevatedButton(
-                onPressed: _simpanLapangan,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 76, 175, 80)
+          _lapanganList.isEmpty
+              ? const Text("Belum ada data lapangan.")
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    border: TableBorder.all(color: Colors.grey.shade300),
+                    columns: const [
+                      DataColumn(label: Text("No")),
+                      DataColumn(label: Text("Nama")),
+                      DataColumn(label: Text("Nomor")),
+                      DataColumn(label: Text("Harga / Jam")),
+                      DataColumn(label: Text("Aksi")),
+                    ],
+                    rows: List.generate(_lapanganList.length, (index) {
+                      final lapangan = _lapanganList[index];
+                      return DataRow(
+                        cells: [
+                          DataCell(Text("${index + 1}")),
+                          DataCell(Text(lapangan["nama"])),
+                          DataCell(Text(lapangan["nomor"])),
+                          DataCell(Text("Rp ${lapangan["harga"]}")),
+                          DataCell(
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _hapusLapangan(index),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
                 ),
-                child: const Text("Simpan",style: TextStyle(color: Colors.white),),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed: _batalInput,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                ),
-                child: const Text("Batal",style: TextStyle(color: Colors.white),),
-              ),
-            ],
-          )
         ],
       ),
     );
   }
 
-  Widget _formField(String label, TextEditingController controller, {TextInputType inputType = TextInputType.text}) {
+  Widget _formField(String label, TextEditingController controller,
+      {TextInputType inputType = TextInputType.text}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -107,7 +179,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             ),
           ),
         ),

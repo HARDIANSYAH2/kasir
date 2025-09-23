@@ -1,5 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'dashboard.dart';
+import 'package:kasir/dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,21 +10,40 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  bool _obscure = true;
+  bool isButtonActive = false;
 
-  void _login() {
-    if (_usernameController.text == "admin" &&
-        _passwordController.text == "1234") {
+  @override
+  void initState() {
+    super.initState();
+    // Pantau input field biar tombol bisa aktif kalau sudah ada isi
+    usernameController.addListener(_checkInput);
+    passwordController.addListener(_checkInput);
+  }
+
+  void _checkInput() {
+    setState(() {
+      isButtonActive =
+          usernameController.text.isNotEmpty &&
+          passwordController.text.isNotEmpty;
+    });
+  }
+
+  void handleLogin() {
+    if (usernameController.text == "admin" &&
+        passwordController.text == "1234") {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DashboardPage()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username atau Password salah")),
+        const SnackBar(
+          content: Text("Username atau password salah!"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -33,96 +53,123 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Row(
         children: [
-          // Bagian kiri (logo + teks)
+          // Bagian kiri (Logo + Welcome text)
           Expanded(
             flex: 1,
             child: Container(
               color: Colors.white,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset("assets/images/logo.jpg", height: 300),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      "assets/images/logo.jpg",
+                      width: 250,
+                      height: 250,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          // Bagian kanan (form login)
+
+          // Bagian kanan (Form Login lebih rapi + blur)
           Expanded(
             flex: 1,
             child: Container(
-              color: const Color.fromARGB(255, 76, 175, 145),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 77, 200, 139),
+                    Color.fromARGB(255, 77, 200, 139),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(30),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  width: 350,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: Container(
+                      padding: const EdgeInsets.all(30),
+                      width: 360,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _usernameController,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.person),
-                          filled: true,
-                          fillColor: Colors.white,
-                          hintText: "Enter your username",
-                          labelText: "Username",
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscure,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure ? Icons.visibility_off : Icons.visibility,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscure = !_obscure;
-                              });
-                            },
                           ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          hintText: "Enter your password",
-                          labelText: "Password",
-                          border: const OutlineInputBorder(),
-                        ),
+                          const SizedBox(height: 25),
+                          TextField(
+                            controller: usernameController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.8),
+                              hintText: "Username",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          TextField(
+                            controller: passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.8),
+                              hintText: "Password",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 25),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: isButtonActive ? handleLogin : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isButtonActive
+                                    ? const Color.fromARGB(255, 171, 232, 182)
+                                    : Colors.grey,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text("Login",style: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade200,
-                          ),
-                          child: const Text("Login"),
-                        ),
-                      )
-                    ],
+                    ),
                   ),
                 ),
               ),

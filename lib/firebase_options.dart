@@ -61,4 +61,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'kasir-2dbee.firebasestorage.app',
     measurementId: 'G-8231R2XWE1',
   );
+
 }
