@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kasir/cetak_laporan.dart';
 import 'package:kasir/kelola_pesanan.dart';
 import 'package:kasir/login_page.dart';
 import 'package:kasir/kelola_lapangan.dart';
+import 'package:intl/intl.dart';
 
 enum DashboardMenu {
   dashboard,
@@ -20,15 +22,21 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   DashboardMenu menuAktif = DashboardMenu.dashboard;
+  Map<String, dynamic>? lapanganDipilih;
 
-  Map<String, dynamic>? lapanganDipilih; // ✅ simpan lapangan yang dipilih
+  
+  final NumberFormat rupiahFormat = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
         children: [
-          //=====> Sidebar <=====\\
+          // ==== Sidebar ====
           Container(
             width: 220,
             color: const Color.fromARGB(255, 76, 175, 124),
@@ -36,9 +44,12 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 const SizedBox(height: 40),
                 _sidebarItem(Icons.home, "Dashboard", DashboardMenu.dashboard),
-                _sidebarItem(Icons.sports_tennis, "Kelola Lapangan", DashboardMenu.kelolaLapangan),
-                _sidebarItem(Icons.assignment, "Kelola Pesanan", DashboardMenu.kelolaPesanan),
-                _sidebarItem(Icons.print, "Cetak Laporan", DashboardMenu.cetakLaporan),
+                _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
+                    DashboardMenu.kelolaLapangan),
+                _sidebarItem(Icons.assignment, "Kelola Pesanan",
+                    DashboardMenu.kelolaPesanan),
+                _sidebarItem(
+                    Icons.print, "Cetak Laporan", DashboardMenu.cetakLaporan),
                 const Spacer(),
                 _sidebarItem(Icons.logout, "Logout", null, isLogout: true),
                 const SizedBox(height: 20),
@@ -46,7 +57,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-          //=====> Konten utama <=====\\
+
           Expanded(
             child: Column(
               children: [
@@ -57,7 +68,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     _getJudulHalaman(menuAktif),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Expanded(
@@ -74,9 +86,9 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu, {bool isLogout = false}) {
+  Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu,
+      {bool isLogout = false}) {
     bool isActive = menuAktif == menu;
-
     return InkWell(
       onTap: () {
         if (isLogout) {
@@ -92,9 +104,8 @@ class _DashboardPageState extends State<DashboardPage> {
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         decoration: BoxDecoration(
-          color: isActive
-              ? const Color.fromARGB(255, 156, 210, 171)
-              : Colors.transparent,
+          color:
+              isActive ? const Color.fromARGB(255, 156, 210, 171) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -102,10 +113,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Icon(icon, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(color: Colors.white),
-              ),
+              child: Text(text, style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -129,51 +137,37 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _getKontenHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
-        // ====> DATA LAPANGAN (dummy, nanti bisa ambil dari DB) <==== \\
-        final dataLapangan = [
-          {
-            "nama": "Lapangan Badminton",
-            "nomor": "1",
-            "harga": "50000",
-            "status": "Tersedia",
-            "available": true,
-            "color": Colors.green,
-            "img": "assets/images/lapangan1.jpg",
-          },
-          {
-            "nama": "Lapangan Badminton",
-            "nomor": "2",
-            "harga": "120000",
-            "status": "Terbooking",
-            "available": false,
-            "color": Colors.red,
-            "img": "assets/images/lapangan2.jpg",
-          },
-          {
-            "nama": "Lapangan Badminton",
-            "nomor": "3",
-            "harga": "75000",
-            "status": "Tersedia",
-            "available": true,
-            "color": Colors.green,
-            "img": "assets/images/lapangan3.jpg",
-          },
-        ];
+        return StreamBuilder<QuerySnapshot>(
+          stream:
+              FirebaseFirestore.instance.collection('lapangan').snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text("Belum ada data lapangan"));
+            }
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            int crossAxisCount = constraints.maxWidth < 800 ? 2 : 3;
-            return GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 4 / 4,
-              ),
-              itemCount: dataLapangan.length,
-              itemBuilder: (context, index) {
-                final item = dataLapangan[index];
-                return _lapanganCard(item);
+            final dataLapangan = snapshot.data!.docs;
+
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                int crossAxisCount = constraints.maxWidth < 800 ? 2 : 3;
+                return GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 4 / 4,
+                  ),
+                  itemCount: dataLapangan.length,
+                  itemBuilder: (context, index) {
+                    final lapangan =
+                        dataLapangan[index].data() as Map<String, dynamic>;
+                    lapangan['id'] = dataLapangan[index].id; // simpan ID
+                    return _lapanganCard(lapangan);
+                  },
+                );
               },
             );
           },
@@ -184,7 +178,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
       case DashboardMenu.kelolaPesanan:
         return KelolaPesananContent(
-          lapanganDipilih: lapanganDipilih, // ✅ kirim data lapangan terpilih
+          lapanganDipilih: lapanganDipilih,
+          onBookingSelesai: _refreshLapangan,
         );
 
       case DashboardMenu.cetakLaporan:
@@ -192,8 +187,8 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // ======> Card Lapangan <====== \\
   Widget _lapanganCard(Map<String, dynamic> item) {
+    final bool available = item["status"] == "Tersedia";
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -213,9 +208,11 @@ class _DashboardPageState extends State<DashboardPage> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: AspectRatio(
               aspectRatio: 16 / 10,
-              child: Image.asset(
-                item["img"],
+              child: Image.network(
+                item["imageUrl"] ?? "",
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Center(child: Icon(Icons.broken_image)),
               ),
             ),
           ),
@@ -224,15 +221,25 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item["nama"], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text("Nomor: ${item["nomor"]}", style: const TextStyle(fontSize: 11, color: Colors.black87)),
-                Text("Rp ${item["harga"]} / jam", style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(item["nama"] ?? "",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13)),
+                Text("Nomor: ${item["nomor"] ?? '-'}",
+                    style: const TextStyle(
+                        fontSize: 11, color: Colors.black87)),
+                Text(
+                  "${rupiahFormat.format(item["harga"] ?? 0)} / jam",
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.circle, color: item["color"], size: 10),
+                    Icon(Icons.circle,
+                        color: available ? Colors.green : Colors.red, size: 10),
                     const SizedBox(width: 5),
-                    Text(item["status"], style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+                    Text(item["status"] ?? "",
+                        style: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w500)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -240,23 +247,25 @@ class _DashboardPageState extends State<DashboardPage> {
                   width: double.infinity,
                   height: 30,
                   child: ElevatedButton(
-                    onPressed: item["available"]
+                    onPressed: available
                         ? () {
                             setState(() {
-                              lapanganDipilih = item; // ✅ simpan lapangan dipilih
-                              menuAktif = DashboardMenu.kelolaPesanan; // ✅ pindah ke menu Pesanan
+                              lapanganDipilih = item;
+                              menuAktif = DashboardMenu.kelolaPesanan;
                             });
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: item["available"] ? Colors.green : Colors.grey[300],
+                      backgroundColor:
+                          available ? Colors.green : Colors.grey[300],
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    child: const Text("Booking", style: TextStyle(fontSize: 12)),
+                    child:
+                        const Text("Booking", style: TextStyle(fontSize: 12)),
                   ),
                 ),
               ],
@@ -267,13 +276,19 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // =====> Konfirmasi Logout <===== \\
+  void _refreshLapangan() {
+    setState(() {
+      menuAktif = DashboardMenu.dashboard;
+    });
+  }
+
   void _showLogoutDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           title: Row(
             children: const [
               Icon(Icons.warning, color: Colors.red),
@@ -290,15 +305,15 @@ class _DashboardPageState extends State<DashboardPage> {
               },
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text("Logout", style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Logout",
+                  style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  MaterialPageRoute(
+                      builder: (context) => const LoginPage()),
                 );
               },
             ),

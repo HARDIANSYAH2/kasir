@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:kasir/dashboard.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,41 +11,64 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool isButtonActive = false;
+  bool isLoading = false;
+  bool isPasswordVisible = false; // <-- untuk toggle password
 
   @override
   void initState() {
     super.initState();
-    // Pantau input field biar tombol bisa aktif kalau sudah ada isi
-    usernameController.addListener(_checkInput);
+    emailController.addListener(_checkInput);
     passwordController.addListener(_checkInput);
   }
 
   void _checkInput() {
     setState(() {
       isButtonActive =
-          usernameController.text.isNotEmpty &&
-          passwordController.text.isNotEmpty;
+          emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
     });
   }
 
-  void handleLogin() {
-    if (usernameController.text == "admin" &&
-        passwordController.text == "1234") {
+  Future<void> handleLogin() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      // Kalau sukses → ke Dashboard
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DashboardPage()),
       );
-    } else {
+    } on FirebaseAuthException catch (e) {
+      String message = "Terjadi kesalahan";
+
+      if (e.code == 'user-not-found') {
+        message = "User tidak ditemukan!";
+      } else if (e.code == 'wrong-password') {
+        message = "Password salah!";
+      } else if (e.code == 'invalid-email') {
+        message = "Format email tidak valid!";
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Username atau password salah!"),
+        SnackBar(
+          content: Text(message),
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -82,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Bagian kanan (Form Login lebih rapi + blur)
+          // Bagian kanan (Form Login + blur effect)
           Expanded(
             flex: 1,
             child: Container(
@@ -124,22 +148,39 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 25),
+                          // TextField Email dengan Icon
                           TextField(
-                            controller: usernameController,
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.email_outlined),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.8),
-                              hintText: "Username",
+                              hintText: "Email",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                           ),
                           const SizedBox(height: 15),
+                          // TextField Password dengan Icon & Toggle Mata
                           TextField(
                             controller: passwordController,
-                            obscureText: true,
+                            obscureText: !isPasswordVisible,
                             decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  isPasswordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    isPasswordVisible = !isPasswordVisible;
+                                  });
+                                },
+                              ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.8),
                               hintText: "Password",
@@ -152,7 +193,9 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: isButtonActive ? handleLogin : null,
+                              onPressed: isButtonActive && !isLoading
+                                  ? handleLogin
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isButtonActive
                                     ? const Color.fromARGB(255, 171, 232, 182)
@@ -163,8 +206,17 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: const Text("Login",style: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
-                              ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      "Login",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
