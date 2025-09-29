@@ -52,11 +52,19 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   }
 
   Future<void> ambilJamYangSudahDipesan(DateTime tanggal) async {
+    if (widget.lapanganDipilih == null) return;
+
     final tanggalISO =
         DateTime(tanggal.year, tanggal.month, tanggal.day).toIso8601String();
 
-    final response =
-        await supabase.from("pesanan").select().eq("tanggal", tanggalISO);
+    final lapanganId = widget.lapanganDipilih!["id"];
+
+    // ✅ Ambil booking hanya untuk lapangan & tanggal yang sama
+    final response = await supabase
+        .from("pesanan")
+        .select()
+        .eq("tanggal", tanggalISO)
+        .eq("lapanganid", lapanganId);
 
     List<String> jamBooked = [];
 
@@ -83,7 +91,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
 
   /// 🔄 Fungsi tambahan: cek ketersediaan lapangan otomatis
   Future<void> cekKetersediaanLapangan() async {
-    if (widget.lapanganDipilih == null) return;
+    if (widget.lapanganDipilih == null || tanggalMain == null) return;
 
     final lapanganId = widget.lapanganDipilih!["id"];
 
@@ -157,11 +165,15 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     }
 
     int hargaPerJam = 0;
-    if (widget.lapanganDipilih?["harga"] != null) {
-      if (widget.lapanganDipilih!["harga"] is int) {
-        hargaPerJam = widget.lapanganDipilih!["harga"];
-      } else if (widget.lapanganDipilih!["harga"] is String) {
-        hargaPerJam = int.tryParse(widget.lapanganDipilih!["harga"]) ?? 0;
+    var hargaRaw = widget.lapanganDipilih?["harga"];
+
+    if (hargaRaw != null) {
+      if (hargaRaw is int) {
+        hargaPerJam = hargaRaw;
+      } else if (hargaRaw is double) {
+        hargaPerJam = hargaRaw.toInt();
+      } else if (hargaRaw is String) {
+        hargaPerJam = int.tryParse(hargaRaw) ?? 0;
       }
     }
 
@@ -333,14 +345,23 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                     children: [
                       ElevatedButton(
                         onPressed: tambahPesanan,
-                        child: const Text("Simpan"),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 70, 177, 44)),
+                        child: const Text(
+                          "Simpan",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: resetForm,
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red),
-                        child: const Text("Batal"),
+                        child: const Text(
+                          "Batal",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   )
