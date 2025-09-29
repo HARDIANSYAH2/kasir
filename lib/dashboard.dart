@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kasir/cetak_laporan.dart';
 import 'package:kasir/kelola_pesanan.dart';
 import 'package:kasir/login_page.dart';
 import 'package:kasir/kelola_lapangan.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum DashboardMenu {
   dashboard,
@@ -24,7 +24,8 @@ class _DashboardPageState extends State<DashboardPage> {
   DashboardMenu menuAktif = DashboardMenu.dashboard;
   Map<String, dynamic>? lapanganDipilih;
 
-  
+  final supabase = Supabase.instance.client;
+
   final NumberFormat rupiahFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -57,7 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-
+          // ==== Konten ====
           Expanded(
             child: Column(
               children: [
@@ -104,8 +105,9 @@ class _DashboardPageState extends State<DashboardPage> {
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         decoration: BoxDecoration(
-          color:
-              isActive ? const Color.fromARGB(255, 156, 210, 171) : Colors.transparent,
+          color: isActive
+              ? const Color.fromARGB(255, 156, 210, 171)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -137,18 +139,17 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _getKontenHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
-        return StreamBuilder<QuerySnapshot>(
-          stream:
-              FirebaseFirestore.instance.collection('lapangan').snapshots(),
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: _getLapangan(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text("Belum ada data lapangan"));
             }
 
-            final dataLapangan = snapshot.data!.docs;
+            final dataLapangan = snapshot.data!;
 
             return LayoutBuilder(
               builder: (context, constraints) {
@@ -162,9 +163,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   itemCount: dataLapangan.length,
                   itemBuilder: (context, index) {
-                    final lapangan =
-                        dataLapangan[index].data() as Map<String, dynamic>;
-                    lapangan['id'] = dataLapangan[index].id; // simpan ID
+                    final lapangan = dataLapangan[index];
                     return _lapanganCard(lapangan);
                   },
                 );
@@ -209,7 +208,7 @@ class _DashboardPageState extends State<DashboardPage> {
             child: AspectRatio(
               aspectRatio: 16 / 10,
               child: Image.network(
-                item["imageUrl"] ?? "",
+                item["gambar_url"] ?? "",
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     const Center(child: Icon(Icons.broken_image)),
@@ -228,7 +227,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     style: const TextStyle(
                         fontSize: 11, color: Colors.black87)),
                 Text(
-                  "${rupiahFormat.format(item["harga"] ?? 0)} / jam",
+                  "${rupiahFormat.format(item["harga_perjam"] ?? 0)} / jam",
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
                 const SizedBox(height: 6),
@@ -282,6 +281,11 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
+  Future<List<Map<String, dynamic>>> _getLapangan() async {
+    final response = await supabase.from("lapangan").select();
+    return List<Map<String, dynamic>>.from(response);
+  }
+
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -289,8 +293,8 @@ class _DashboardPageState extends State<DashboardPage> {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.warning, color: Colors.red),
               SizedBox(width: 10),
               Text("Konfirmasi Logout"),
@@ -312,8 +316,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const LoginPage()),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
             ),

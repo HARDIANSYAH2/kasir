@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:kasir/dashboard.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isButtonActive = false;
   bool isLoading = false;
-  bool isPasswordVisible = false; // <-- untuk toggle password
+  bool isPasswordVisible = false; // ---- toggle password ---- \\
 
   @override
   void initState() {
@@ -38,30 +38,29 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      // Kalau sukses → ke Dashboard
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardPage()),
-      );
-    } on FirebaseAuthException catch (e) {
-      String message = "Terjadi kesalahan";
-
-      if (e.code == 'user-not-found') {
-        message = "User tidak ditemukan!";
-      } else if (e.code == 'wrong-password') {
-        message = "Password salah!";
-      } else if (e.code == 'invalid-email') {
-        message = "Format email tidak valid!";
+      if (response.user != null) {
+        // ---- kalau login sukses → ke Dashboard ---- \\
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Login gagal, periksa email & password"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Text("Error: $e"),
           backgroundColor: Colors.red,
         ),
       );
@@ -77,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Row(
         children: [
-          // Bagian kiri (Logo + Welcome text)
+          // ---- Bagian kiri (Logo + Welcome text) ---- \\
           Expanded(
             flex: 1,
             child: Container(
@@ -106,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Bagian kanan (Form Login + blur effect)
+          // ---- Bagian kanan (Form Login + blur effect) ---- \\
           Expanded(
             flex: 1,
             child: Container(
@@ -148,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 25),
-                          // TextField Email dengan Icon
+                          // ---- TextField Email ---- \\
                           TextField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -163,8 +162,8 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 15),
-                          // TextField Password dengan Icon & Toggle Mata
-                          TextField(
+                          // ---- TextField Password ---- \\
+                          TextField( 
                             controller: passwordController,
                             obscureText: !isPasswordVisible,
                             decoration: InputDecoration(
