@@ -130,7 +130,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
   }
 
   // === Hapus ===
-  Future<void> _hapusLapangan(String id) async { // ✅ ubah ke String
+  Future<void> _hapusLapangan(String id) async {
+    // ✅ ubah ke String
     try {
       await supabase.from("lapangan").delete().eq("id", id);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +188,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                   _editingId == null
                       ? "Tambah Data Lapangan"
                       : "Edit Data Lapangan",
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
                 _formField("Nomor Lapangan:", nomorController),
@@ -221,7 +223,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
                                   )
                                 : const Icon(Icons.image),
                             label: Text(_isUploadingImage
@@ -254,7 +257,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                     const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: _resetForm,
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      style:
+                          ElevatedButton.styleFrom(backgroundColor: Colors.red),
                       child: const Text("Batal",
                           style: TextStyle(color: Colors.white)),
                     ),
@@ -307,7 +311,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                           lapangan["gambar_url"] != null &&
                                   lapangan["gambar_url"].toString().isNotEmpty
                               ? Image.network(lapangan["gambar_url"],
-                                  width: 60, height: 60, fit: BoxFit.cover)
+                                  width: 50, height: 50, fit: BoxFit.cover)
                               : const Icon(Icons.image_not_supported, size: 40),
                         ),
                         DataCell(Text(lapangan["nama"] ?? "")),
@@ -315,7 +319,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                         DataCell(
                           Text(
                             rupiahFormat.format(
-                              int.tryParse(lapangan["harga_perjam"].toString()) ?? 0,
+                              int.tryParse(
+                                      lapangan["harga_perjam"].toString()) ??
+                                  0,
                             ),
                           ),
                         ),
@@ -324,13 +330,16 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                           Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon:
+                                    const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () => _editLapangan(lapangan),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _hapusLapangan(
-                                  lapangan["id"].toString(), // ✅ langsung String
+                                  lapangan["id"]
+                                      .toString()
                                 ),
                               ),
                             ],

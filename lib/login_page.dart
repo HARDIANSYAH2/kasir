@@ -16,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isButtonActive = false;
   bool isLoading = false;
-  bool isPasswordVisible = false; // ---- toggle password ---- \\
+  bool isPasswordVisible = false;
 
   @override
   void initState() {
@@ -44,25 +44,46 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.user != null) {
-        // ---- kalau login sukses → ke Dashboard ---- \\
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const DashboardPage()),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Login gagal, periksa email & password"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Login Gagal"),
+                content: const Text("Periksa email & Password anda"),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(
+                            context,
+                          ),
+                      child: const Text("data"))
+                ],
+              );
+            });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error: $e"),
-          backgroundColor: Colors.red,
-        ),
+      String errorMessage ="Terjadi kesalahan. Silakan coba lagi.";
+      if (e.toString().contains("Invalid login credentials")){
+        errorMessage = "Email atau password salah. Silakan coba lagi.";
+      }
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Login Gagal"),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        },
       );
     } finally {
       setState(() {
@@ -76,7 +97,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Row(
         children: [
-          // ---- Bagian kiri (Logo + Welcome text) ---- \\
           Expanded(
             flex: 1,
             child: Container(
@@ -87,8 +107,8 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Image.asset(
                       "assets/images/logo.jpg",
-                      width: 250,
-                      height: 250,
+                      width: 350,
+                      height: 350,
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -104,8 +124,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-
-          // ---- Bagian kanan (Form Login + blur effect) ---- \\
           Expanded(
             flex: 1,
             child: Container(
@@ -147,7 +165,6 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 25),
-                          // ---- TextField Email ---- \\
                           TextField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -162,8 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 15),
-                          // ---- TextField Password ---- \\
-                          TextField( 
+                          TextField(
                             controller: passwordController,
                             obscureText: !isPasswordVisible,
                             decoration: InputDecoration(

@@ -224,8 +224,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 13)),
                 Text("Nomor: ${item["nomor"] ?? '-'}",
-                    style: const TextStyle(
-                        fontSize: 11, color: Colors.black87)),
+                    style:
+                        const TextStyle(fontSize: 11, color: Colors.black87)),
                 Text(
                   "${rupiahFormat.format(item["harga_perjam"] ?? 0)} / jam",
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
@@ -310,8 +310,8 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text("Logout",
-                  style: TextStyle(color: Colors.white)),
+              child:
+                  const Text("Logout", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(

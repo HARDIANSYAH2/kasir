@@ -32,6 +32,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     ambilDataPesanan();
   }
 
+  /// Ambil data dari Supabase
   Future<void> ambilDataPesanan() async {
     try {
       var query = supabase.from("pesanan").select();
@@ -69,6 +70,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     }
   }
 
+  /// Pilih periode tanggal
   Future<void> pilihTanggal() async {
     final picked = await showDateRangePicker(
       context: context,
@@ -90,9 +92,35 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     }
   }
 
-  /// 👉 fungsi untuk bikin PDF
+  /// Format tanggal
+  String _formatTanggal(dynamic raw) {
+    if (raw == null) return "-";
+    DateTime? dt;
+    if (raw is DateTime) {
+      dt = raw;
+    } else if (raw is String) {
+      dt = DateTime.tryParse(raw);
+    }
+    if (dt == null) return "-";
+    return DateFormat("dd-MM-yyyy").format(dt);
+  }
+
+  /// Convert dynamic ke num
+  num _toNum(dynamic raw) {
+    if (raw == null) return 0;
+    if (raw is num) return raw;
+    if (raw is String) {
+      return num.tryParse(raw.replaceAll(',', '')) ?? 0;
+    }
+    return 0;
+  }
+
+  /// Generate PDF
   pw.Document generatePDF() {
     final pdf = pw.Document();
+
+    final num totalKeseluruhan =
+        dataPesanan.fold<num>(0, (sum, item) => sum + _toNum(item["total"]));
 
     pdf.addPage(
       pw.MultiPage(
@@ -106,11 +134,13 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             if (filterTanggal != null) ...[
               pw.SizedBox(height: 5),
               pw.Text(
-                "Periode: ${filterTanggal!.start.day}-${filterTanggal!.start.month}-${filterTanggal!.start.year} "
-                "s.d ${filterTanggal!.end.day}-${filterTanggal!.end.month}-${filterTanggal!.end.year}",
+                "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} "
+                "s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
               ),
             ],
             pw.SizedBox(height: 20),
+
+            // Tabel PDF
             pw.Table.fromTextArray(
               headers: [
                 "Nama Penyewa",
@@ -120,26 +150,44 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                 "Durasi",
                 "Total"
               ],
-              cellAlignment: pw.Alignment.center,
-              headerStyle:
-                  pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
-              headerDecoration: pw.BoxDecoration(color: PdfColors.grey300),
-              cellStyle: pw.TextStyle(fontSize: 11),
-              border: pw.TableBorder.all(width: 0.5, color: PdfColors.grey700),
               data: dataPesanan.map((pesanan) {
-                final tanggal = DateTime.tryParse(pesanan["tanggal"] ?? "");
-                final tglStr = tanggal != null
-                    ? "${tanggal.day}-${tanggal.month}-${tanggal.year}"
-                    : "-";
+                final tglStr = _formatTanggal(pesanan["tanggal"]);
+                final durasi = pesanan["durasi"] ?? "-";
+                final jam =
+                    "${pesanan["jamMulai"] ?? ""} - ${pesanan["jamSelesai"] ?? ""}";
+                final total = _toNum(pesanan["total"]);
                 return [
                   pesanan["nama"] ?? "-",
                   pesanan["lapangan"] ?? "-",
                   tglStr,
-                  "${pesanan["jamMulai"] ?? ""} - ${pesanan["jamSelesai"] ?? ""}",
-                  "${pesanan["durasi"]} Jam",
-                  formatRupiah.format(pesanan["total"] ?? 0),
+                  jam,
+                  "$durasi Jam",
+                  formatRupiah.format(total),
                 ];
               }).toList(),
+              cellAlignment: pw.Alignment.center,
+              headerStyle: pw.TextStyle(
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 12,
+                color: PdfColors.white,
+              ),
+              headerDecoration: pw.BoxDecoration(color: PdfColors.green700),
+              cellStyle: pw.TextStyle(fontSize: 11),
+              border: pw.TableBorder.all(width: 0.3, color: PdfColors.grey600),
+            ),
+
+            pw.SizedBox(height: 10),
+
+            // Total keseluruhan
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.end,
+              children: [
+                pw.Text(
+                  "Total Keseluruhan: ${formatRupiah.format(totalKeseluruhan)}",
+                  style:
+                      pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13),
+                ),
+              ],
             ),
           ];
         },
@@ -149,53 +197,69 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     return pdf;
   }
 
-  /// Cetak langsung ke printer
+  /// Cetak PDF
   Future<void> cetakPDF() async {
-    final pdf = generatePDF();
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    try {
+      final pdf = generatePDF();
+      await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Gagal cetak: $e")));
+      }
+    }
   }
 
-  /// Download PDF (Web + Mobile + Desktop)
+  /// Download PDF
   Future<void> downloadPDF() async {
     try {
       final pdf = generatePDF();
       final bytes = await pdf.save();
 
       if (kIsWeb) {
-        // 👉 Flutter Web: trigger download
         await Printing.sharePdf(
           bytes: Uint8List.fromList(bytes),
           filename: "laporan_pesanan.pdf",
         );
-      } else {
-        // 👉 Android/iOS/Desktop: simpan ke folder Downloads
-        final dir = await getDownloadsDirectory();
-        final file = File(
-            "${dir!.path}/laporan_pesanan_${DateTime.now().millisecondsSinceEpoch}.pdf");
-        await file.writeAsBytes(bytes);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("File berhasil disimpan di ${file.path}")),
-          );
-        }
+        return;
+      }
+
+      Directory? dir;
+      try {
+        dir = await getDownloadsDirectory();
+      } catch (_) {
+        dir = null;
+      }
+      dir ??= await getApplicationDocumentsDirectory();
+
+      final file = File(
+          "${dir.path}/laporan_pesanan_${DateTime.now().millisecondsSinceEpoch}.pdf");
+      await file.writeAsBytes(bytes);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("File berhasil disimpan di ${file.path}")),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal download PDF: $e")),
-        );
+          SnackBar(content: Text("Gagal download PDF: $e")));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final num totalKeseluruhan =
+        dataPesanan.fold<num>(0, (sum, item) => sum + _toNum(item["total"]));
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Judul
+          /// Judul
           const Text(
             "Cetak Laporan",
             style: TextStyle(
@@ -206,7 +270,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
           ),
           const SizedBox(height: 16),
 
-          // Filter tanggal
+          /// Filter tanggal
           Card(
             elevation: 2,
             shape:
@@ -223,8 +287,8 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                   const SizedBox(width: 12),
                   if (filterTanggal != null)
                     Text(
-                      "${filterTanggal!.start.day}-${filterTanggal!.start.month}-${filterTanggal!.start.year} "
-                      "s.d ${filterTanggal!.end.day}-${filterTanggal!.end.month}-${filterTanggal!.end.year}",
+                      "${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} "
+                      "s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -236,7 +300,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
           ),
           const SizedBox(height: 16),
 
-          // Tabel laporan
+          /// Tabel laporan
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -255,10 +319,12 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
                             columnSpacing: 24,
+                            dataRowHeight: 48,
+                            headingRowHeight: 52,
                             border:
                                 TableBorder.all(color: Colors.grey.shade300),
                             headingRowColor: MaterialStateProperty.all(
-                              Colors.green.shade100,
+                              Colors.green.shade200,
                             ),
                             headingTextStyle: const TextStyle(
                               fontWeight: FontWeight.bold,
@@ -272,24 +338,43 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                               DataColumn(label: Text("Durasi")),
                               DataColumn(label: Text("Total")),
                             ],
-                            rows: dataPesanan.map((pesanan) {
-                              final tanggal =
-                                  DateTime.tryParse(pesanan["tanggal"] ?? "");
-                              final tglStr = tanggal != null
-                                  ? "${tanggal.day}-${tanggal.month}-${tanggal.year}"
-                                  : "-";
+                            rows: [
+                              ...dataPesanan.map((pesanan) {
+                                final tglStr = _formatTanggal(pesanan["tanggal"]);
+                                final jam =
+                                    "${pesanan["jamMulai"] ?? ""} - ${pesanan["jamSelesai"] ?? ""}";
+                                final durasi = pesanan["durasi"] ?? "-";
+                                final total = _toNum(pesanan["total"]);
 
-                              return DataRow(cells: [
-                                DataCell(Text(pesanan["nama"] ?? "-")),
-                                DataCell(Text(pesanan["lapangan"] ?? "-")),
-                                DataCell(Text(tglStr)),
+                                return DataRow(cells: [
+                                  DataCell(Text(pesanan["nama"] ?? "-")),
+                                  DataCell(Text(pesanan["lapangan"] ?? "-")),
+                                  DataCell(Center(child: Text(tglStr))),
+                                  DataCell(Center(child: Text(jam))),
+                                  DataCell(Center(child: Text("$durasi Jam"))),
+                                  DataCell(Center(
+                                      child: Text(formatRupiah.format(total)))),
+                                ]);
+                              }).toList(),
+
+                              /// Baris total keseluruhan
+                              DataRow(cells: [
+                                const DataCell(Text(
+                                  "Total Keseluruhan",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                )),
+                                const DataCell(Text("")),
+                                const DataCell(Text("")),
+                                const DataCell(Text("")),
+                                const DataCell(Text("")),
                                 DataCell(Text(
-                                    "${pesanan["jamMulai"] ?? ""} - ${pesanan["jamSelesai"] ?? ""}")),
-                                DataCell(Text("${pesanan["durasi"]} Jam")),
-                                DataCell(Text(formatRupiah
-                                    .format(pesanan["total"] ?? 0))),
-                              ]);
-                            }).toList(),
+                                  formatRupiah.format(totalKeseluruhan),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )),
+                              ]),
+                            ],
                           ),
                         ),
                       ),
@@ -297,7 +382,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
 
           const SizedBox(height: 20),
 
-          // Tombol aksi
+          /// Tombol aksi
           Row(
             children: [
               ElevatedButton.icon(

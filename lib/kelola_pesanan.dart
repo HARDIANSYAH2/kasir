@@ -1,14 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class KelolaPesananContent extends StatefulWidget {
-  final Map<String, dynamic>? lapanganDipilih;
   final VoidCallback? onBookingSelesai;
 
   const KelolaPesananContent({
     super.key,
-    this.lapanganDipilih,
-    this.onBookingSelesai,
+    this.onBookingSelesai, Map<String, dynamic>? lapanganDipilih,
   });
 
   @override
@@ -30,56 +29,93 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   ];
 
   List<String> jamSudahDipesan = [];
+  Timer? _timer;
+  String _statusLapangan = "-";
+
+  // daftar lapangan & lapangan dipilih
+  List<Map<String, dynamic>> daftarLapangan = [];
+  Map<String, dynamic>? lapanganDipilihLocal;
 
   @override
   void initState() {
     super.initState();
     durasiController.text = "";
-    cekKetersediaanLapangan(); // 👈 cek otomatis saat widget load
+    fetchLapangan();
+    cekKetersediaanLapangan();
+
+    // auto cek tiap menit biar jam bisa aktif lagi
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      cekKetersediaanLapangan();
+      if (tanggalMain != null) {
+        ambilJamYangSudahDipesan(tanggalMain!);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> fetchLapangan() async {
+    final response = await supabase.from("lapangan").select();
+    setState(() {
+      daftarLapangan = List<Map<String, dynamic>>.from(response);
+    });
   }
 
   String hitungJamSelesai(String jamMulai, int durasi) {
     final parts = jamMulai.split(":");
     int hour = int.parse(parts[0]);
     int minute = int.parse(parts[1]);
-
     DateTime mulai = DateTime(2025, 1, 1, hour, minute);
     DateTime selesai = mulai.add(Duration(hours: durasi));
-
     String hh = selesai.hour.toString().padLeft(2, '0');
     String mm = selesai.minute.toString().padLeft(2, '0');
     return "$hh:$mm";
   }
 
+  /// ✅ perbaikan: filter jam yang sudah lewat supaya bisa aktif lagi
   Future<void> ambilJamYangSudahDipesan(DateTime tanggal) async {
-    if (widget.lapanganDipilih == null) return;
+    if (lapanganDipilihLocal == null) return;
 
-    final tanggalISO =
-        DateTime(tanggal.year, tanggal.month, tanggal.day).toIso8601String();
+    final lapanganId = lapanganDipilihLocal!["id"];
+    final startOfDay = DateTime(tanggal.year, tanggal.month, tanggal.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final lapanganId = widget.lapanganDipilih!["id"];
+    final startStr = startOfDay.toIso8601String().split('T').first;
+    final endStr = endOfDay.toIso8601String().split('T').first;
 
-    // ✅ Ambil booking hanya untuk lapangan & tanggal yang sama
     final response = await supabase
         .from("pesanan")
         .select()
-        .eq("tanggal", tanggalISO)
+        .gte("tanggal", startStr)
+        .lt("tanggal", endStr)
         .eq("lapanganid", lapanganId);
 
     List<String> jamBooked = [];
+    DateTime sekarang = DateTime.now();
 
     for (var data in response) {
-      String? jamMulai = data["jamMulai"];
-      int durasi = int.tryParse(data["durasi"].toString()) ?? 1;
+      String? jamMulai = data["jamMulai"]?.toString();
+      int durasi = int.tryParse(data["durasi"]?.toString() ?? "") ?? 1;
+      String? tanggalStr = data["tanggal"]?.toString();
 
-      if (jamMulai != null) {
+      if (jamMulai != null && jamMulai.isNotEmpty && tanggalStr != null) {
         final parts = jamMulai.split(":");
         int hour = int.tryParse(parts[0]) ?? 0;
 
-        for (int i = 0; i < durasi; i++) {
-          int jamBookedInt = hour + i;
-          String jamStr = "${jamBookedInt.toString().padLeft(2, '0')}:00";
-          jamBooked.add(jamStr);
+        DateTime bookingStart = DateTime.parse(tanggalStr).add(Duration(hours: hour));
+        DateTime bookingEnd = bookingStart.add(Duration(hours: durasi));
+
+        // ✅ hanya simpan booking kalau belum lewat jam selesai
+        if (bookingEnd.isAfter(sekarang)) {
+          for (int i = 0; i < durasi; i++) {
+            int jamBookedInt = hour + i;
+            String jamStr = "${jamBookedInt.toString().padLeft(2, '0')}:00";
+            jamBooked.add(jamStr);
+          }
         }
       }
     }
@@ -87,35 +123,38 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     setState(() {
       jamSudahDipesan = jamBooked;
     });
+
+    // update status lapangan
+    if (jamSudahDipesan.length >= jamPilihan.length) {
+      await supabase.from("lapangan").update({"status": "Tidak Tersedia"}).eq("id", lapanganId);
+      setState(() {
+        _statusLapangan = "Tidak Tersedia";
+      });
+    } else {
+      await supabase.from("lapangan").update({"status": "Tersedia"}).eq("id", lapanganId);
+      setState(() {
+        _statusLapangan = "Tersedia";
+      });
+    }
   }
 
-  /// 🔄 Fungsi tambahan: cek ketersediaan lapangan otomatis
   Future<void> cekKetersediaanLapangan() async {
-    if (widget.lapanganDipilih == null || tanggalMain == null) return;
+    if (lapanganDipilihLocal == null) return;
 
-    final lapanganId = widget.lapanganDipilih!["id"];
-
-    // Ambil semua pesanan untuk lapangan ini
-    final response = await supabase
-        .from("pesanan")
-        .select()
-        .eq("lapanganid", lapanganId);
+    final lapanganId = lapanganDipilihLocal!["id"];
+    final response = await supabase.from("pesanan").select().eq("lapanganid", lapanganId);
 
     bool masihAdaBookingAktif = false;
     DateTime sekarang = DateTime.now();
 
     for (var data in response) {
-      final tanggal = DateTime.tryParse(data["tanggal"] ?? "");
-      final jamSelesai = data["jamSelesai"];
-
-      if (tanggal != null && jamSelesai != null) {
+      final tanggal = DateTime.tryParse(data["tanggal"]?.toString() ?? "");
+      final jamSelesai = data["jamSelesai"]?.toString();
+      if (tanggal != null && jamSelesai != null && jamSelesai.isNotEmpty) {
         final parts = jamSelesai.split(":");
         int hour = int.tryParse(parts[0]) ?? 0;
         int minute = int.tryParse(parts[1]) ?? 0;
-
-        DateTime waktuSelesai =
-            DateTime(tanggal.year, tanggal.month, tanggal.day, hour, minute);
-
+        DateTime waktuSelesai = DateTime(tanggal.year, tanggal.month, tanggal.day, hour, minute);
         if (waktuSelesai.isAfter(sekarang)) {
           masihAdaBookingAktif = true;
           break;
@@ -123,32 +162,28 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       }
     }
 
-    // Update status lapangan
-    await supabase.from("lapangan").update({
-      "status": masihAdaBookingAktif ? "Tidak Tersedia" : "Tersedia"
-    }).eq("id", lapanganId);
+    final statusBaru = masihAdaBookingAktif ? "Tidak Tersedia" : "Tersedia";
 
-    setState(() {});
+    await supabase.from("lapangan").update({"status": statusBaru}).eq("id", lapanganId);
+
+    setState(() {
+      _statusLapangan = statusBaru;
+    });
   }
 
   Future<void> tambahPesanan() async {
-    if (widget.lapanganDipilih == null) {
+    if (lapanganDipilihLocal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Silakan pilih lapangan terlebih dahulu!")),
       );
       return;
     }
-
-    if (namaController.text.isEmpty ||
-        jamMulaiDipilih == null ||
-        tanggalMain == null ||
-        durasiController.text.isEmpty) {
+    if (namaController.text.isEmpty || jamMulaiDipilih == null || tanggalMain == null || durasiController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Lengkapi semua data pesanan!")),
       );
       return;
     }
-
     int durasi = int.tryParse(durasiController.text) ?? 1;
     if (durasi < 1 || durasi > 4) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,51 +192,64 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       return;
     }
 
-    if (jamSudahDipesan.contains(jamMulaiDipilih)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Jam tersebut sudah dibooking")),
-      );
-      return;
+    int mulaiBaru = int.parse(jamMulaiDipilih!.split(":")[0]);
+    int selesaiBaru = mulaiBaru + durasi;
+
+    for (String jam in jamSudahDipesan) {
+      int jamBooked = int.parse(jam.split(":")[0]);
+      if (jamBooked >= mulaiBaru && jamBooked < selesaiBaru) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Waktu yang dipilih sudah dibooking")),
+        );
+        return;
+      }
     }
 
     int hargaPerJam = 0;
-    var hargaRaw = widget.lapanganDipilih?["harga"];
-
+    var hargaRaw = lapanganDipilihLocal?["harga_perjam"] ?? lapanganDipilihLocal?["harga"];
     if (hargaRaw != null) {
-      if (hargaRaw is int) {
-        hargaPerJam = hargaRaw;
-      } else if (hargaRaw is double) {
-        hargaPerJam = hargaRaw.toInt();
-      } else if (hargaRaw is String) {
-        hargaPerJam = int.tryParse(hargaRaw) ?? 0;
+      hargaPerJam = int.tryParse(hargaRaw.toString()) ?? 0;
+    }
+    if (hargaPerJam == 0) {
+      final lapanganId = lapanganDipilihLocal?["id"];
+      final lapanganData = await supabase.from("lapangan").select("harga_perjam, harga").eq("id", lapanganId).maybeSingle();
+      if (lapanganData != null) {
+        hargaPerJam =
+            int.tryParse(lapanganData["harga_perjam"]?.toString() ?? "") ??
+            int.tryParse(lapanganData["harga"]?.toString() ?? "") ??
+            0;
       }
     }
 
     int total = hargaPerJam * durasi;
     String jamSelesai = hitungJamSelesai(jamMulaiDipilih!, durasi);
 
-    String lapanganText =
-        "${widget.lapanganDipilih?["nama"] ?? "-"} ${widget.lapanganDipilih?["nomor"] ?? ""}".trim();
+    String lapanganText = "${lapanganDipilihLocal?["nama"] ?? "-"} ${lapanganDipilihLocal?["nomor"] ?? ""}".trim();
+
+    final tanggalString =
+        "${tanggalMain!.year}-${tanggalMain!.month.toString().padLeft(2, '0')}-${tanggalMain!.day.toString().padLeft(2, '0')}";
 
     final dataPesanan = {
       "nama": namaController.text,
-      "lapanganid": widget.lapanganDipilih?["id"],
+      "lapanganid": lapanganDipilihLocal?["id"],
       "lapangan": lapanganText,
-      "tanggal": tanggalMain!.toIso8601String(),
+      "tanggal": tanggalString,
       "jamMulai": jamMulaiDipilih,
       "jamSelesai": jamSelesai,
       "durasi": durasi,
       "total": total,
-      "createdAt": DateTime.now().toIso8601String(),
+      "created_at": DateTime.now().toIso8601String(),
     };
 
     try {
-      await supabase.from("pesanan").insert(dataPesanan);
+      await supabase.from("pesanan").insert(dataPesanan).select();
 
-      await cekKetersediaanLapangan(); // 👈 update status otomatis
+      await cekKetersediaanLapangan();
+      if (tanggalMain != null) {
+        await ambilJamYangSudahDipesan(tanggalMain!);
+      }
 
       resetForm();
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Pesanan berhasil disimpan ke Supabase")),
       );
@@ -220,18 +268,26 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       jamMulaiDipilih = null;
       tanggalMain = null;
       jamSudahDipesan = [];
+      lapanganDipilihLocal = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    String lapanganText =
-        "${widget.lapanganDipilih?["nama"] ?? ""} ${widget.lapanganDipilih?["nomor"] ?? ""}".trim();
-
     return SingleChildScrollView(
       child: Column(
         children: [
-          // --- FORM PESANAN ---
+          Text(
+            "Status: $_statusLapangan",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: (_statusLapangan == "Tidak Tersedia") ? Colors.red : Colors.green,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Form Tambah Pesanan
           Card(
             margin: const EdgeInsets.all(20),
             child: Padding(
@@ -239,8 +295,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
               child: Column(
                 children: [
                   const Text("Tambah Data Pesanan",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   TextField(
                     controller: namaController,
@@ -250,14 +305,29 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
-                    readOnly: true,
-                    controller: TextEditingController(text: lapanganText),
+                  DropdownButtonFormField<Map<String, dynamic>>(
+                    value: lapanganDipilihLocal,
+                    items: daftarLapangan.map((lap) {
+                      return DropdownMenuItem(
+                        value: lap,
+                        child: Text("${lap["nama"]} ${lap["nomor"] ?? ""}"),
+                      );
+                    }).toList(),
+                    onChanged: (val) async {
+                      setState(() {
+                        lapanganDipilihLocal = val;
+                      });
+                      if (tanggalMain != null) {
+                        await ambilJamYangSudahDipesan(tanggalMain!);
+                      }
+                      await cekKetersediaanLapangan();
+                    },
                     decoration: const InputDecoration(
-                      labelText: "Lapangan",
+                      labelText: "Pilih Lapangan",
                       border: OutlineInputBorder(),
                     ),
                   ),
+
                   const SizedBox(height: 12),
                   InkWell(
                     onTap: () async {
@@ -296,9 +366,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                       bool isDisabled = jamSudahDipesan.contains(jam);
 
                       return GestureDetector(
-                        onTap: isDisabled
-                            ? null
-                            : () => setState(() => jamMulaiDipilih = jam),
+                        onTap: isDisabled ? null : () => setState(() => jamMulaiDipilih = jam),
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -325,13 +393,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: durasiController.text.isNotEmpty
-                        ? int.tryParse(durasiController.text)
-                        : null,
-                    items: [1, 2, 3, 4]
-                        .map((d) =>
-                            DropdownMenuItem(value: d, child: Text("$d Jam")))
-                        .toList(),
+                    value: durasiController.text.isNotEmpty ? int.tryParse(durasiController.text) : null,
+                    items: [1, 2, 3, 4].map((d) => DropdownMenuItem(value: d, child: Text("$d Jam"))).toList(),
                     onChanged: (val) {
                       if (val != null) durasiController.text = val.toString();
                     },
@@ -345,23 +408,14 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                     children: [
                       ElevatedButton(
                         onPressed: tambahPesanan,
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 70, 177, 44)),
-                        child: const Text(
-                          "Simpan",
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        child: const Text("Simpan", style: TextStyle(color: Colors.white)),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: resetForm,
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red),
-                        child: const Text(
-                          "Batal",
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        child: const Text("Batal", style: TextStyle(color: Colors.white)),
                       ),
                     ],
                   )
@@ -370,12 +424,9 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
             ),
           ),
 
-          // --- LIST PESANAN ---
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: supabase
-                .from("pesanan")
-                .select()
-                .order("createdAt", ascending: false),
+          // List Pesanan
+          FutureBuilder<List<dynamic>>(
+            future: supabase.from("pesanan").select().order("created_at", ascending: false),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const CircularProgressIndicator();
@@ -390,10 +441,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: pesananDocs.length,
                 itemBuilder: (context, index) {
-                  final pesanan = pesananDocs[index];
-                  final tanggal =
-                      DateTime.tryParse(pesanan["tanggal"] ?? "");
-
+                  final pesanan = pesananDocs[index] as Map<String, dynamic>;
+                  final tanggal = DateTime.tryParse(pesanan["tanggal"]?.toString() ?? "");
                   return Card(
                     child: ListTile(
                       title: Text(pesanan["nama"] ?? "-"),
@@ -401,10 +450,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("Lapangan : ${pesanan["lapangan"] ?? "-"}"),
-                          Text(
-                              "Tanggal  : ${tanggal != null ? "${tanggal.day}-${tanggal.month}-${tanggal.year}" : "-"}"),
-                          Text(
-                              "Jam      : ${pesanan["jamMulai"]} - ${pesanan["jamSelesai"]}"),
+                          Text("Tanggal  : ${tanggal != null ? "${tanggal.day}-${tanggal.month}-${tanggal.year}" : "-"}"),
+                          Text("Jam      : ${pesanan["jamMulai"]} - ${pesanan["jamSelesai"]}"),
                           Text("Durasi   : ${pesanan["durasi"]} Jam"),
                           Text("Total    : Rp ${pesanan["total"]}"),
                         ],
@@ -413,17 +460,14 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
                           try {
-                            await supabase
-                                .from("pesanan")
-                                .delete()
-                                .eq("id", pesanan["id"]);
-
-                            await cekKetersediaanLapangan(); // 👈 update status otomatis
-
+                            await supabase.from("pesanan").delete().eq("id", pesanan["id"]);
+                            await cekKetersediaanLapangan();
+                            if (tanggalMain != null) {
+                              await ambilJamYangSudahDipesan(tanggalMain!);
+                            }
                             setState(() {});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text("Pesanan berhasil dihapus")),
+                              const SnackBar(content: Text("Pesanan berhasil dihapus")),
                             );
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
