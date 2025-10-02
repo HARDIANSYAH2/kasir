@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class KelolaPesananContent extends StatefulWidget {
   final VoidCallback? onBookingSelesai;
 
   const KelolaPesananContent({
     super.key,
-    this.onBookingSelesai, Map<String, dynamic>? lapanganDipilih,
+    this.onBookingSelesai,
+    Map<String, dynamic>? lapanganDipilih,
   });
 
   @override
@@ -274,6 +276,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
 
   @override
   Widget build(BuildContext context) {
+    final formatRupiah = NumberFormat("#,##0", "id_ID"); // ✅ formatter uang
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -424,7 +428,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
             ),
           ),
 
-          // List Pesanan
+          // ✅ List Pesanan dengan format rupiah
           FutureBuilder<List<dynamic>>(
             future: supabase.from("pesanan").select().order("created_at", ascending: false),
             builder: (context, snapshot) {
@@ -436,49 +440,55 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                 return const Text("Belum ada pesanan");
               }
 
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: pesananDocs.length,
-                itemBuilder: (context, index) {
-                  final pesanan = pesananDocs[index] as Map<String, dynamic>;
-                  final tanggal = DateTime.tryParse(pesanan["tanggal"]?.toString() ?? "");
-                  return Card(
-                    child: ListTile(
-                      title: Text(pesanan["nama"] ?? "-"),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Lapangan : ${pesanan["lapangan"] ?? "-"}"),
-                          Text("Tanggal  : ${tanggal != null ? "${tanggal.day}-${tanggal.month}-${tanggal.year}" : "-"}"),
-                          Text("Jam      : ${pesanan["jamMulai"]} - ${pesanan["jamSelesai"]}"),
-                          Text("Durasi   : ${pesanan["durasi"]} Jam"),
-                          Text("Total    : Rp ${pesanan["total"]}"),
-                        ],
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          try {
-                            await supabase.from("pesanan").delete().eq("id", pesanan["id"]);
-                            await cekKetersediaanLapangan();
-                            if (tanggalMain != null) {
-                              await ambilJamYangSudahDipesan(tanggalMain!);
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: MaterialStateProperty.all(Colors.grey[200]),
+                  border: TableBorder.all(color: Colors.black12),
+                  columns: const [
+                    DataColumn(label: Text("Nama")),
+                    DataColumn(label: Text("Lapangan")),
+                    DataColumn(label: Text("Tanggal")),
+                    DataColumn(label: Text("Jam")),
+                    DataColumn(label: Text("Durasi")),
+                    DataColumn(label: Text("Total")),
+                    DataColumn(label: Text("Aksi")),
+                  ],
+                  rows: pesananDocs.map((pesanan) {
+                    final tanggal = DateTime.tryParse(pesanan["tanggal"]?.toString() ?? "");
+                    return DataRow(cells: [
+                      DataCell(Text(pesanan["nama"] ?? "-")),
+                      DataCell(Text(pesanan["lapangan"] ?? "-")),
+                      DataCell(Text(
+                          tanggal != null ? "${tanggal.day}-${tanggal.month}-${tanggal.year}" : "-")),
+                      DataCell(Text("${pesanan["jamMulai"]} - ${pesanan["jamSelesai"]}")),
+                      DataCell(Text("${pesanan["durasi"]} Jam")),
+                      DataCell(Text("Rp ${formatRupiah.format(pesanan["total"])}")), // ✅ sudah pakai format
+                      DataCell(
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            try {
+                              await supabase.from("pesanan").delete().eq("id", pesanan["id"]);
+                              await cekKetersediaanLapangan();
+                              if (tanggalMain != null) {
+                                await ambilJamYangSudahDipesan(tanggalMain!);
+                              }
+                              setState(() {});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Pesanan berhasil dihapus")),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Gagal hapus: $e")),
+                              );
                             }
-                            setState(() {});
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Pesanan berhasil dihapus")),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Gagal hapus: $e")),
-                            );
-                          }
-                        },
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    ]);
+                  }).toList(),
+                ),
               );
             },
           )
