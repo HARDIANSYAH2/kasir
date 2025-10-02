@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       String errorMessage ="Terjadi kesalahan. Silakan coba lagi.";
       if (e.toString().contains("Invalid login credentials")){
-        errorMessage = "Email atau password salah. Silakan coba lagi.";
+        errorMessage = "Terjadi kesalahan. Silakan cek email dan password Anda.";
       }
       showDialog(
         context: context,
