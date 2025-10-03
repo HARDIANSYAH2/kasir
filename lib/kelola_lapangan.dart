@@ -337,10 +337,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                               IconButton(
                                 icon:
                                     const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _hapusLapangan(
-                                  lapangan["id"]
-                                      .toString()
-                                ),
+                                onPressed: () =>
+                                    _hapusLapangan(lapangan["id"].toString()),
                               ),
                             ],
                           ),

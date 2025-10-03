@@ -241,32 +241,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             fontSize: 11, fontWeight: FontWeight.w500)),
                   ],
                 ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  width: double.infinity,
-                  height: 30,
-                  child: ElevatedButton(
-                    onPressed: available
-                        ? () {
-                            setState(() {
-                              lapanganDipilih = item;
-                              menuAktif = DashboardMenu.kelolaPesanan;
-                            });
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          available ? Colors.green : Colors.grey[300],
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child:
-                        const Text("Booking", style: TextStyle(fontSize: 12)),
-                  ),
-                ),
               ],
             ),
           ),
@@ -281,8 +255,12 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
+  /// ✅ Perbaikan: Tambah orderBy supaya nomor urut
   Future<List<Map<String, dynamic>>> _getLapangan() async {
-    final response = await supabase.from("lapangan").select();
+    final response = await supabase
+        .from("lapangan")
+        .select()
+        .order("nomor", ascending: true); // urutkan berdasarkan nomor
     return List<Map<String, dynamic>>.from(response);
   }
 

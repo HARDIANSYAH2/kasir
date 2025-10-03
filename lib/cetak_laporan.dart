@@ -274,11 +274,13 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                             fontWeight: FontWeight.bold, color: Colors.black87),
                       ),
                     const Spacer(),
-                    SizedBox(
-                      width: 200,
+
+                    /// 🔎 Search bar panjang otomatis
+                    Expanded(
+                      flex: 1,
                       child: TextField(
                         decoration: const InputDecoration(
-                          hintText: "Cari Nama Penyewa...",
+                          hintText: "Cari Nama Penyewa",
                           prefixIcon: Icon(Icons.search),
                           border: OutlineInputBorder(),
                           isDense: true,
