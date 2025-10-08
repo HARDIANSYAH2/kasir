@@ -21,7 +21,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
   String? _imageUrl;
   bool _isLoading = false;
   bool _isUploadingImage = false;
-  String? _editingId; // ✅ sekarang pakai String
+  String? _editingId;
 
   final NumberFormat rupiahFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -95,7 +95,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
 
     try {
       if (_editingId == null) {
-        // Tambah baru
         await supabase.from("lapangan").insert({
           "nama": "Lapangan Badminton",
           "nomor": nomor,
@@ -107,12 +106,11 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
           const SnackBar(content: Text("Lapangan berhasil disimpan.")),
         );
       } else {
-        // Update data lama
         await supabase.from("lapangan").update({
           "nomor": nomor,
           "harga_perjam": harga,
           "gambar_url": _imageUrl ?? "",
-        }).eq("id", _editingId!); // ✅ id pakai String
+        }).eq("id", _editingId!);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Lapangan berhasil diperbarui.")),
         );
@@ -129,9 +127,36 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
-  // === Hapus ===
+  // === Popup Konfirmasi Hapus === \\
+  Future<void> _konfirmasiHapus(String id) async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Konfirmasi Hapus"),
+        content: const Text("Yakin ingin menghapus lapangan ini?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text("Hapus",style: TextStyle(color: Colors.white),),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi == true) {
+      _hapusLapangan(id);
+    }
+  }
+
+  // === Hapus === \\
   Future<void> _hapusLapangan(String id) async {
-    // ✅ ubah ke String
     try {
       await supabase.from("lapangan").delete().eq("id", id);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,14 +170,39 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
-  // === Edit ===
+  // === Popup Edit === \\
+  Future<void> _konfirmasiEdit(Map<String, dynamic> data) async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Lapangan"),
+        content: const Text("Apakah Anda ingin mengedit data ini?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Edit"),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi == true) {
+      _editLapangan(data);
+    }
+  }
+
+  // === Edit === \\
   void _editLapangan(Map<String, dynamic> data) {
     setState(() {
-      _editingId = data["id"].toString(); // ✅ simpan id sebagai String
+      _editingId = data["id"].toString();
       nomorController.text = data["nomor"]?.toString() ?? "";
       hargaController.text = data["harga_perjam"]?.toString() ?? "";
       _imageUrl = data["gambar_url"];
-      _pickedBytes = null; // clear preview
+      _pickedBytes = null;
     });
   }
 
@@ -173,7 +223,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // === Form ===
+          // === Form === \\
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -320,8 +370,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                           Text(
                             rupiahFormat.format(
                               int.tryParse(
-                                      lapangan["harga_perjam"].toString()) ??
-                                  0,
+                                      lapangan["harga_perjam"].toString()) ?? 0,
                             ),
                           ),
                         ),
@@ -332,13 +381,14 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                               IconButton(
                                 icon:
                                     const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _editLapangan(lapangan),
+                                onPressed: () =>
+                                    _konfirmasiEdit(lapangan),
                               ),
                               IconButton(
                                 icon:
                                     const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () =>
-                                    _hapusLapangan(lapangan["id"].toString()),
+                                    _konfirmasiHapus(lapangan["id"].toString()),
                               ),
                             ],
                           ),
