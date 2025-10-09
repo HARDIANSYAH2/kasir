@@ -35,6 +35,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
 
   Future<void> ambilDataPesanan() async {
     try {
+      if (mounted) setState(() => isLoading = true);
       var query = supabase.from("pesanan").select();
 
       if (filterTanggal != null) {
@@ -53,15 +54,19 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
 
       final response = await query.order("createdAt", ascending: false);
 
-      setState(() {
-        dataPesanan = List<Map<String, dynamic>>.from(response);
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          dataPesanan = List<Map<String, dynamic>>.from(response as List);
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal ambil data: $e")),
-      );
+      if (mounted) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal ambil data: $e")),
+        );
+      }
     }
   }
 
@@ -77,7 +82,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     return DateFormat("dd-MM-yyyy").format(dt);
   }
 
-  num _toNum(dynamic raw) {
+  num _toNum(dynamic raw) { 
     if (raw == null) return 0;
     if (raw is num) return raw;
     if (raw is String) {
@@ -96,27 +101,27 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return [
-            pw.Text(
-              "Laporan Pesanan Lapangan",
-              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
-            ),
-            if (filterTanggal != null) ...[
-              pw.SizedBox(height: 5),
-              pw.Text(
-                "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} "
-                "s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
+            pw.Container(
+              alignment: pw.Alignment.centerLeft,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    "LAPORAN PESANAN LAPANGAN",
+                    style: pw.TextStyle(
+                        fontSize: 18, fontWeight: pw.FontWeight.bold),
+                  ),
+                  if (filterTanggal != null) pw.SizedBox(height: 6),
+                  if (filterTanggal != null)
+                    pw.Text(
+                      "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
+                    ),
+                ],
               ),
-            ],
-            pw.SizedBox(height: 20),
+            ),
+            pw.SizedBox(height: 16),
             pw.Table.fromTextArray(
-              headers: [
-                "Nama Penyewa",
-                "Lapangan",
-                "Tanggal",
-                "Jam",
-                "Durasi",
-                "Total"
-              ],
+              headers: ["Nama", "Lapangan", "Tanggal", "Jam", "Durasi", "Total"],
               data: dataFiltered.map((pesanan) {
                 final tglStr = _formatTanggal(pesanan["tanggal"]);
                 final durasi = pesanan["durasi"] ?? "-";
@@ -129,34 +134,30 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                   tglStr,
                   jam,
                   "$durasi Jam",
-                  formatRupiah.format(total),
+                  formatRupiah.format(total)
                 ];
               }).toList(),
-              cellAlignment: pw.Alignment.center,
               headerStyle: pw.TextStyle(
-                fontWeight: pw.FontWeight.bold,
-                fontSize: 12,
-                color: PdfColors.white,
-              ),
-              headerDecoration: pw.BoxDecoration(color: PdfColors.green700),
-              cellStyle: pw.TextStyle(fontSize: 11),
+                  fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+              headerDecoration: pw.BoxDecoration(color: PdfColors.green800),
+              cellAlignment: pw.Alignment.centerLeft,
+              cellStyle: const pw.TextStyle(fontSize: 10),
               border: pw.TableBorder.all(width: 0.3, color: PdfColors.grey600),
             ),
-            pw.SizedBox(height: 10),
+            pw.SizedBox(height: 12),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Text(
-                  "Total Keseluruhan: ${formatRupiah.format(totalKeseluruhan)}",
-                  style:
-                      pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13),
-                ),
+                    "Total Keseluruhan: ${formatRupiah.format(totalKeseluruhan)}",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
               ],
-            ),
+            )
           ];
         },
       ),
     );
+
     return pdf;
   }
 
@@ -165,8 +166,10 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
       final pdf = generatePDF(dataFiltered);
       await Printing.layoutPdf(onLayout: (format) async => pdf.save());
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Gagal cetak: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Gagal cetak: $e")));
+      }
     }
   }
 
@@ -202,15 +205,18 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal download PDF: $e")),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Gagal download PDF: $e")));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final Color primary = Colors.green.shade800;
+    final Color accent = Colors.greenAccent.shade400;
+    final Color cardBg = Colors.green.shade50;
+
     final dataFiltered = dataPesanan.where((item) {
       final nama = (item["nama"] ?? "").toString().toLowerCase();
       return nama.contains(searchKeyword.toLowerCase());
@@ -220,218 +226,239 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         dataFiltered.fold<num>(0, (sum, item) => sum + _toNum(item["total"]));
 
     return Scaffold(
+      backgroundColor: Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        backgroundColor: primary,
+        elevation: 3,
         title: const Text(
           "Cetak Laporan",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            /// Filter
+            // --- CARD RINGKASAN ---
             Card(
-              elevation: 3,
+              color: cardBg,
+              elevation: 4,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 child: Row(
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final picked = await showDateRangePicker(
-                          context: context,
-                          firstDate: DateTime(2023),
-                          lastDate: DateTime(2100),
-                          initialDateRange: filterTanggal ??
-                              DateTimeRange(
-                                start: DateTime.now(),
-                                end: DateTime.now(),
-                              ),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            filterTanggal = picked;
-                            isLoading = true;
-                          });
-                          await ambilDataPesanan();
-                        }
-                      },
-                      icon: const Icon(Icons.date_range),
-                      label: const Text("Pilih Periode"),
-                    ),
-                    const SizedBox(width: 12),
-                    if (filterTanggal != null)
-                      Text(
-                        "${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} "
-                        "s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black87),
-                      ),
-                    const Spacer(),
-
-                    /// 🔎 Search bar panjang otomatis
                     Expanded(
-                      flex: 1,
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: "Cari Nama Penyewa",
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: EdgeInsets.all(8),
-                        ),
-                        onChanged: (val) {
-                          setState(() => searchKeyword = val);
-                        },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Laporan Pesanan',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: primary)),
+                          const SizedBox(height: 6),
+                          Text(
+                            filterTanggal == null
+                                ? 'Semua Periode'
+                                : 'Periode: ${DateFormat('dd-MM-yyyy').format(filterTanggal!.start)} s.d ${DateFormat('dd-MM-yyyy').format(filterTanggal!.end)}',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                        ],
                       ),
                     ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('Total Transaksi',
+                            style: TextStyle(color: Colors.grey.shade600)),
+                        const SizedBox(height: 6),
+                        Text(formatRupiah.format(totalKeseluruhan),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: primary)),
+                      ],
+                    )
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
-            /// Tabel laporan
-            Expanded(
-              child: Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : dataFiltered.isEmpty
-                        ? const Center(
-                            child: Text(
-                              "Data tidak ditemukan",
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          )
-                        : Scrollbar(
-                            thumbVisibility: true,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: DataTable(
-                                  columnSpacing: 24,
-                                  dataRowHeight: 48,
-                                  headingRowHeight: 52,
-                                  border: TableBorder.all(
-                                      color: Colors.grey.shade300),
-                                  headingRowColor: MaterialStateProperty.all(
-                                    Colors.green.shade200,
-                                  ),
-                                  headingTextStyle: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  columns: const [
-                                    DataColumn(label: Text("Nama Penyewa")),
-                                    DataColumn(label: Text("Lapangan")),
-                                    DataColumn(label: Text("Tanggal")),
-                                    DataColumn(label: Text("Jam Main")),
-                                    DataColumn(label: Text("Durasi")),
-                                    DataColumn(label: Text("Total")),
-                                  ],
-                                  rows: [
-                                    ...dataFiltered.map((pesanan) {
-                                      final tglStr =
-                                          _formatTanggal(pesanan["tanggal"]);
-                                      final jam =
-                                          "${pesanan["jamMulai"] ?? ""} - ${pesanan["jamSelesai"] ?? ""}";
-                                      final durasi = pesanan["durasi"] ?? "-";
-                                      final total = _toNum(pesanan["total"]);
-
-                                      return DataRow(cells: [
-                                        DataCell(
-                                            Text(pesanan["nama"] ?? "-")),
-                                        DataCell(Text(
-                                            pesanan["lapangan"] ?? "-")),
-                                        DataCell(
-                                            Center(child: Text(tglStr))),
-                                        DataCell(Center(child: Text(jam))),
-                                        DataCell(Center(
-                                            child: Text("$durasi Jam"))),
-                                        DataCell(Center(
-                                            child: Text(formatRupiah
-                                                .format(total)))),
-                                      ]);
-                                    }).toList(),
-                                    DataRow(cells: [
-                                      const DataCell(Text(
-                                        "Total Keseluruhan",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                      const DataCell(Text("")),
-                                      const DataCell(Text("")),
-                                      const DataCell(Text("")),
-                                      const DataCell(Text("")),
-                                      DataCell(Text(
-                                        formatRupiah
-                                            .format(totalKeseluruhan),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                    ]),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            /// Tombol aksi
+            // --- FILTER & SEARCH ---
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: dataFiltered.isEmpty
-                        ? null
-                        : () => cetakPDF(dataFiltered),
-                    icon: const Icon(Icons.print, color: Colors.white),
-                    label: const Text(
-                      "Cetak Laporan",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                   ),
+                  onPressed: () async {
+                    final picked = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                      initialDateRange: filterTanggal ??
+                          DateTimeRange(
+                              start: DateTime.now(), end: DateTime.now()),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        filterTanggal = picked;
+                      });
+                      await ambilDataPesanan();
+                    }
+                  },
+                  icon: const Icon(Icons.date_range, color: Colors.white),
+                  label: const Text('Pilih Periode',
+                      style: TextStyle(color: Colors.white)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama penyewa...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none),
                     ),
-                    onPressed: dataFiltered.isEmpty
-                        ? null
-                        : () => downloadPDF(dataFiltered),
-                    icon: const Icon(Icons.download, color: Colors.white),
-                    label: const Text(
-                      "Download PDF",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    onChanged: (val) => setState(() => searchKeyword = val),
                   ),
                 ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
+                  onPressed: dataFiltered.isEmpty
+                      ? null
+                      : () => downloadPDF(dataFiltered),
+                  icon: const Icon(Icons.download_rounded),
+                  label: const Text('Download PDF'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
+                  onPressed:
+                      dataFiltered.isEmpty ? null : () => cetakPDF(dataFiltered),
+                  icon: const Icon(Icons.print),
+                  label: const Text('Cetak'),
+                ),
               ],
+            ),
+            const SizedBox(height: 18),
+
+            // --- TABEL DATA ---
+            Expanded(
+              child: Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : dataFiltered.isEmpty
+                          ? Center(
+                              child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                  Icon(Icons.inbox,
+                                      size: 48, color: Colors.grey.shade400),
+                                  const SizedBox(height: 8),
+                                  Text('Tidak ada data',
+                                      style: TextStyle(
+                                          color: Colors.grey.shade600))
+                                ]))
+                          : Scrollbar(
+                              thumbVisibility: true,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    headingRowHeight: 56,
+                                    dataRowHeight: 56,
+                                    columnSpacing: 28,
+                                    headingRowColor:
+                                        MaterialStateProperty.all(
+                                            Colors.green.shade200),
+                                    border: TableBorder.symmetric(
+                                        inside: BorderSide(
+                                            color: Colors.green.shade100),
+                                        outside: BorderSide(
+                                            color: Colors.green.shade300)),
+                                    columns: const [
+                                      DataColumn(label: Text('Nama Penyewa')),
+                                      DataColumn(label: Text('Lapangan')),
+                                      DataColumn(label: Text('Tanggal')),
+                                      DataColumn(label: Text('Jam Main')),
+                                      DataColumn(label: Text('Durasi')),
+                                      DataColumn(label: Text('Total')),
+                                    ],
+                                    rows: [
+                                      ...dataFiltered.map((pesanan) {
+                                        final tglStr =
+                                            _formatTanggal(pesanan['tanggal']);
+                                        final jam =
+                                            '${pesanan['jamMulai'] ?? ''} - ${pesanan['jamSelesai'] ?? ''}';
+                                        final durasi =
+                                            pesanan['durasi'] ?? '-';
+                                        final total = _toNum(pesanan['total']);
+
+                                        return DataRow(cells: [
+                                          DataCell(Text(pesanan['nama'] ?? '-')),
+                                          DataCell(
+                                              Text(pesanan['lapangan'] ?? '-')),
+                                          DataCell(Text(tglStr)),
+                                          DataCell(Text(jam)),
+                                          DataCell(Text('$durasi Jam')),
+                                          DataCell(
+                                              Text(formatRupiah.format(total))),
+                                        ]);
+                                      }).toList(),
+                                      DataRow(cells: [
+                                        DataCell(Text('Total Keseluruhan',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: primary))),
+                                        const DataCell(Text('')),
+                                        const DataCell(Text('')),
+                                        const DataCell(Text('')),
+                                        const DataCell(Text('')),
+                                        DataCell(Text(
+                                            formatRupiah
+                                                .format(totalKeseluruhan),
+                                            style: const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.bold))),
+                                      ])
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                ),
+              ),
             ),
           ],
         ),

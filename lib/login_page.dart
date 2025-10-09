@@ -44,53 +44,47 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardPage()),
-        );
+        // Login berhasil, arahkan ke dashboard
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
+          );
+        }
       } else {
-        showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text("Login Gagal"),
-                content: const Text("Periksa email & Password anda"),
-                actions: [
-                  TextButton(
-                      onPressed: () => Navigator.pop(
-                            context,
-                          ),
-                      child: const Text("data"))
-                ],
-              );
-            });
+        _showErrorDialog("Login Gagal", "Periksa email dan password Anda.");
       }
     } catch (e) {
       String errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
+
       if (e.toString().contains("Invalid login credentials")) {
-        errorMessage =
-            "Terjadi kesalahan. Silakan cek email dan password Anda.";
+        errorMessage = "Email atau password salah. Silakan periksa kembali.";
       }
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Login Gagal"),
-            content: Text(errorMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
+
+      _showErrorDialog("Login Gagal", errorMessage);
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -98,6 +92,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Row(
         children: [
+          // Bagian kiri (Logo dan teks)
           Expanded(
             flex: 1,
             child: Container(
@@ -108,8 +103,8 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Image.asset(
                       "assets/images/logo.jpg",
-                      width: 350,
-                      height: 350,
+                      width: 280,
+                      height: 280,
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -118,6 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                     ),
                   ],
@@ -125,14 +121,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+
+          // Bagian kanan (form login)
           Expanded(
             flex: 1,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color.fromARGB(255, 77, 200, 139),
-                    Color.fromARGB(255, 77, 200, 139),
+                    Color(0xFF4DC88B),
+                    Color(0xFF38B671),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -162,10 +160,12 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 25),
+
+                          // Email Field
                           TextField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -179,7 +179,10 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 15),
+
+                          // Password Field
                           TextField(
                             controller: passwordController,
                             obscureText: !isPasswordVisible,
@@ -205,26 +208,34 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 25),
+
+                          // Tombol Login
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: isButtonActive && !isLoading
-                                  ? handleLogin
-                                  : null,
+                              onPressed:
+                                  isButtonActive && !isLoading ? handleLogin : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isButtonActive
-                                    ? const Color.fromARGB(255, 171, 232, 182)
+                                    ? const Color(0xFF4DC88B)
                                     : Colors.grey,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 15),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
+                                elevation: 4,
                               ),
                               child: isLoading
-                                  ? const CircularProgressIndicator(
-                                      color: Colors.white,
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Text(
                                       "Login",

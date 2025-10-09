@@ -37,10 +37,10 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       body: Row(
         children: [
-          // ==== Sidebar ====
+          // ==== Sidebar ==== \\
           Container(
             width: 220,
-            color: const Color.fromARGB(255, 76, 175, 124),
+            color: const Color(0xFF4CAF7C),
             child: Column(
               children: [
                 const SizedBox(height: 40),
@@ -58,7 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-          // ==== Konten ====
+          // ==== Konten Utama ==== \\
           Expanded(
             child: Column(
               children: [
@@ -87,16 +87,18 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  /// ==== Sidebar Item ==== \\
   Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu,
       {bool isLogout = false}) {
-    bool isActive = menuAktif == menu;
+    final bool isActive = menuAktif == menu;
+
     return InkWell(
       onTap: () {
         if (isLogout) {
           _showLogoutDialog();
-        } else {
+        } else if (menu != null) {
           setState(() {
-            menuAktif = menu!;
+            menuAktif = menu;
           });
         }
       },
@@ -115,7 +117,11 @@ class _DashboardPageState extends State<DashboardPage> {
             Icon(icon, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(text, style: const TextStyle(color: Colors.white)),
+              child: Text(
+                text,
+                style: const TextStyle(color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -123,6 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  /// ==== Judul Halaman ==== \\
   String _getJudulHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -136,6 +143,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  /// ==== Konten Halaman ==== \\
   Widget _getKontenHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -145,6 +153,13 @@ class _DashboardPageState extends State<DashboardPage> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
+            if (snapshot.hasError) {
+              return Center(
+                  child: Text(
+                "Terjadi kesalahan: ${snapshot.error}",
+                textAlign: TextAlign.center,
+              ));
+            }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text("Belum ada data lapangan"));
             }
@@ -153,7 +168,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                int crossAxisCount = constraints.maxWidth < 800 ? 2 : 3;
+                final crossAxisCount = constraints.maxWidth < 800 ? 2 : 3;
                 return GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
@@ -186,8 +201,11 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  /// ==== Kartu Lapangan ==== \\
   Widget _lapanganCard(Map<String, dynamic> item) {
-    final bool available = item["status"] == "Tersedia";
+    final bool available =
+        (item["status"]?.toString().toLowerCase() ?? "") == "tersedia";
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -220,12 +238,17 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item["nama"] ?? "",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 13)),
-                Text("Nomor: ${item["nomor"] ?? '-'}",
-                    style:
-                        const TextStyle(fontSize: 11, color: Colors.black87)),
+                Text(
+                  item["nama"] ?? "",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  "Nomor: ${item["nomor"] ?? '-'}",
+                  style: const TextStyle(fontSize: 11, color: Colors.black87),
+                ),
                 Text(
                   "${rupiahFormat.format(item["harga_perjam"] ?? 0)} / jam",
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
@@ -233,12 +256,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.circle,
-                        color: available ? Colors.green : Colors.red, size: 10),
+                    Icon(
+                      Icons.circle,
+                      color: available ? Colors.green : Colors.red,
+                      size: 10,
+                    ),
                     const SizedBox(width: 5),
-                    Text(item["status"] ?? "",
-                        style: const TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w500)),
+                    Text(
+                      item["status"] ?? "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -249,21 +279,24 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  /// ==== Refresh setelah booking selesai ==== \\
   void _refreshLapangan() {
     setState(() {
       menuAktif = DashboardMenu.dashboard;
     });
   }
 
-  /// ✅ Perbaikan: Tambah orderBy supaya nomor urut
+  /// ==== Ambil Data Lapangan dari Supabase ==== \\
   Future<List<Map<String, dynamic>>> _getLapangan() async {
     final response = await supabase
         .from("lapangan")
         .select()
-        .order("nomor", ascending: true); // urutkan berdasarkan nomor
+        .order("nomor", ascending: true);
+
     return List<Map<String, dynamic>>.from(response);
   }
 
+  /// ==== Dialog Logout ==== \\
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -278,25 +311,28 @@ class _DashboardPageState extends State<DashboardPage> {
               Text("Konfirmasi Logout"),
             ],
           ),
-          content: const Text("Apakah anda yakin ingin logout?"),
+          content: const Text("Apakah Anda yakin ingin logout?"),
           actions: [
             TextButton(
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text("Batal"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child:
-                  const Text("Logout", style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                  );
+                }
               },
+              child: const Text(
+                "Logout",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
