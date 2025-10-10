@@ -36,7 +36,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     super.dispose();
   }
 
-  // === Upload Gambar ===
   Future<void> _pickImage() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -80,7 +79,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
-  // === Simpan atau Update ===
   Future<void> _simpanLapangan() async {
     final nomor = nomorController.text.trim();
     final harga = int.tryParse(hargaController.text.trim()) ?? 0;
@@ -135,7 +133,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
-  // === Hapus ===
   Future<void> _konfirmasiHapus(String id) async {
     final konfirmasi = await showDialog<bool>(
       context: context,
@@ -177,7 +174,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
-  // === Edit ===
   void _editLapangan(Map<String, dynamic> data) {
     setState(() {
       _editingId = data["id"].toString();
@@ -201,29 +197,12 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF4F9F4),
+      color: const Color(0xFFDFF4DF), 
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: const [
-                Icon(Icons.sports_tennis, color: Colors.green, size: 28),
-                SizedBox(width: 10),
-                Text(
-                  "Kelola Lapangan",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Divider(thickness: 1, color: Color(0xFFE0E0E0)),
-            const SizedBox(height: 28),
             _formWidget(),
             const SizedBox(height: 50),
             const Text(
@@ -238,10 +217,10 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // === FORM ===
   Widget _formWidget() {
     return Card(
-      elevation: 5,
+      color:const Color(0xFFDFF4DF),
+      elevation: 6,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
@@ -252,9 +231,10 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
           children: [
             Text(
               _editingId == null ? "Tambah Data Lapangan" : "Ubah Data Lapangan",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
+                color: Colors.green.shade800,
               ),
             ),
             const SizedBox(height: 30),
@@ -277,16 +257,15 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // === Widget Upload Gambar ===
   Widget _uploadImageWidget() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: Colors.green.shade50,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade300, width: 1),
+            border: Border.all(color: Colors.green.shade200, width: 1),
           ),
           padding: const EdgeInsets.all(8),
           child: Center(
@@ -323,6 +302,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
               : const Icon(Icons.image_outlined),
           label: Text(_isUploadingImage ? "Mengunggah..." : "Pilih Gambar"),
           style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.green.shade600),
+            foregroundColor: Colors.green.shade800,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -340,7 +321,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
           onPressed: _isLoading ? null : _simpanLapangan,
           icon: const Icon(Icons.save, color: Colors.white),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade600,
+            backgroundColor: Colors.green.shade700,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -400,7 +381,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
               child: DataTable(
                 headingRowColor:
                     MaterialStateProperty.all(Colors.green.shade50),
-                border: TableBorder.all(color: Colors.grey.shade200),
+                border: TableBorder.all(color: Colors.green.shade100),
                 columns: const [
                   DataColumn(label: Text("No")),
                   DataColumn(label: Text("Gambar")),
@@ -476,7 +457,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
         labelText: label,
         labelStyle: const TextStyle(color: Colors.black54),
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: Colors.green.shade50,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
         ),

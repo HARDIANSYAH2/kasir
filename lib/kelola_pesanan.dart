@@ -25,9 +25,9 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   String? jamMulaiDipilih;
 
   final List<String> jamPilihan = [
-    "08:00", "09:00", "10:00", "11:00", "12:00",
-    "13:00", "14:00", "15:00", "16:00", "17:00",
-    "18:00", "19:00", "20:00", "21:00"
+    "08:00","09:00","10:00","11:00","12:00",
+    "13:00","14:00","15:00","16:00","17:00",
+    "18:00","19:00","20:00","21:00"
   ];
 
   List<String> jamSudahDipesan = [];
@@ -36,11 +36,14 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   List<Map<String, dynamic>> daftarLapangan = [];
   Map<String, dynamic>? lapanganDipilihLocal;
 
+  final Color bgColor = const Color(0xFFDFF4DF);
+  final Color cardColor = const Color(0xFFE9F8E9);
+  final Color primaryGreen = const Color(0xFF2E7D32);
+
   @override
   void initState() {
     super.initState();
     durasiController.text = "";
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchLapangan();
       ambilJamYangSudahDipesan(DateTime.now());
@@ -67,7 +70,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
           .from("lapangan")
           .select()
           .order("nomor", ascending: true);
-
       if (mounted) {
         setState(() {
           daftarLapangan = List<Map<String, dynamic>>.from(response);
@@ -89,7 +91,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
 
   Future<void> ambilJamYangSudahDipesan([DateTime? tanggal]) async {
     if (lapanganDipilihLocal == null) return;
-
     try {
       final targetTanggal = tanggal ?? DateTime.now();
       final lapanganId = lapanganDipilihLocal!["id"];
@@ -119,7 +120,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
           int hour = int.tryParse(parts[0]) ?? 0;
           DateTime bookingStart = DateTime.parse(tanggalStr).add(Duration(hours: hour));
           DateTime bookingEnd = bookingStart.add(Duration(hours: durasi));
-
           if (bookingEnd.isAfter(sekarang)) {
             for (int i = 0; i < durasi; i++) {
               jamBooked.add("${(hour + i).toString().padLeft(2, '0')}:00");
@@ -128,7 +128,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         }
       }
 
-      // Tandai jam yang sudah lewat hari ini sebagai booked
       if (targetTanggal.year == sekarang.year &&
           targetTanggal.month == sekarang.month &&
           targetTanggal.day == sekarang.day) {
@@ -172,7 +171,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       );
       return;
     }
-
     try {
       int durasi = int.tryParse(durasiController.text) ?? 1;
       int mulaiBaru = int.parse(jamMulaiDipilih!.split(":")[0]);
@@ -201,8 +199,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       }
 
       int hargaPerJam = int.tryParse(
-            (lapanganDipilihLocal?["harga_perjam"] ??
-             lapanganDipilihLocal?["harga"]).toString(),
+            (lapanganDipilihLocal?["harga_perjam"] ?? lapanganDipilihLocal?["harga"]).toString(),
           ) ?? 0;
       int total = hargaPerJam * durasi;
       String jamSelesai = hitungJamSelesai(jamMulaiDipilih!, durasi);
@@ -255,290 +252,279 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       borderRadius: BorderRadius.circular(20),
     );
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                "Status: $_statusLapangan",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: (_statusLapangan == "Tidak Tersedia")
-                      ? Colors.red
-                      : Colors.green[700],
+    return Container(
+      color: bgColor,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Text(
+                  "Status: $_statusLapangan",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: (_statusLapangan == "Tidak Tersedia")
+                        ? Colors.red
+                        : primaryGreen,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              shadowColor: Colors.black.withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Text(
-                      "Tambah Data Pesanan",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: namaController,
-                      decoration: InputDecoration(
-                        labelText: "Nama Penyewa",
-                        prefixIcon: const Icon(Icons.person_outline),
-                        border: roundedBorder,
+              const SizedBox(height: 20),
+              Card(
+                color: cardColor,
+                elevation: 6,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Tambah Data Pesanan",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: primaryGreen,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    DropdownButtonFormField<Map<String, dynamic>>(
-                      value: lapanganDipilihLocal,
-                      items: daftarLapangan.map((lap) {
-                        return DropdownMenuItem(
-                          value: lap,
-                          child: Text("${lap["nama"]} ${lap["nomor"] ?? ""}"),
-                        );
-                      }).toList(),
-                      onChanged: (val) async {
-                        setState(() => lapanganDipilihLocal = val);
-                        await ambilJamYangSudahDipesan(tanggalMain ?? DateTime.now());
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Pilih Lapangan",
-                        prefixIcon: const Icon(Icons.sports_tennis_outlined),
-                        border: roundedBorder,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    InkWell(
-                      onTap: () async {
-                        final pilihTanggal = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime(2100),
-                        );
-                        if (pilihTanggal != null) {
-                          setState(() {
-                            tanggalMain = pilihTanggal;
-                            jamMulaiDipilih = null;
-                          });
-                          await ambilJamYangSudahDipesan(pilihTanggal);
-                        }
-                      },
-                      child: InputDecorator(
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: namaController,
                         decoration: InputDecoration(
-                          labelText: "Tanggal Main",
-                          prefixIcon: const Icon(Icons.calendar_today_outlined),
+                          labelText: "Nama Penyewa",
+                          prefixIcon: const Icon(Icons.person_outline),
                           border: roundedBorder,
                         ),
+                      ),
+                      const SizedBox(height: 14),
+                      DropdownButtonFormField<Map<String, dynamic>>(
+                        value: lapanganDipilihLocal,
+                        items: daftarLapangan.map((lap) {
+                          return DropdownMenuItem(
+                            value: lap,
+                            child: Text("${lap["nama"]} ${lap["nomor"] ?? ""}"),
+                          );
+                        }).toList(),
+                        onChanged: (val) async {
+                          setState(() => lapanganDipilihLocal = val);
+                          await ambilJamYangSudahDipesan(tanggalMain ?? DateTime.now());
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Pilih Lapangan",
+                          prefixIcon: const Icon(Icons.sports_tennis_outlined),
+                          border: roundedBorder,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      InkWell(
+                        onTap: () async {
+                          final pilihTanggal = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2100),
+                          );
+                          if (pilihTanggal != null) {
+                            setState(() {
+                              tanggalMain = pilihTanggal;
+                              jamMulaiDipilih = null;
+                            });
+                            await ambilJamYangSudahDipesan(pilihTanggal);
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: "Tanggal Main",
+                            prefixIcon: const Icon(Icons.calendar_today_outlined),
+                            border: roundedBorder,
+                          ),
+                          child: Text(
+                            tanggalMain != null
+                                ? "${tanggalMain!.day}-${tanggalMain!.month}-${tanggalMain!.year}"
+                                : "Pilih Tanggal",
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const Align(
+                        alignment: Alignment.centerLeft,
                         child: Text(
-                          tanggalMain != null
-                              ? "${tanggalMain!.day}-${tanggalMain!.month}-${tanggalMain!.year}"
-                              : "Pilih Tanggal",
+                          "Jam Mulai",
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("Jam Mulai", style: TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: jamPilihan.map((jam) {
-                        bool isSelected = jamMulaiDipilih == jam;
-                        bool isDisabled = jamSudahDipesan.contains(jam);
-                        return ChoiceChip(
-                          label: Text(jam),
-                          selected: isSelected,
-                          onSelected: isDisabled ? null : (_) => setState(() => jamMulaiDipilih = jam),
-                          selectedColor: Colors.green[700],
-                          disabledColor: Colors.grey[300],
-                          backgroundColor: Colors.white,
-                          elevation: isSelected ? 3 : 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          labelStyle: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : isDisabled
-                                    ? Colors.grey
-                                    : Colors.black,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 18),
-                    DropdownButtonFormField<int>(
-                      value: durasiController.text.isNotEmpty
-                          ? int.tryParse(durasiController.text)
-                          : null,
-                      items: [1, 2, 3, 4]
-                          .map((d) => DropdownMenuItem(value: d, child: Text("$d Jam")))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) durasiController.text = val.toString();
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Durasi",
-                        prefixIcon: const Icon(Icons.timer_outlined),
-                        border: roundedBorder,
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: tambahPesanan,
-                          icon: const Icon(Icons.save, color: Colors.white),
-                          label: const Text("Simpan", style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green[700],
-                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: jamPilihan.map((jam) {
+                          bool isSelected = jamMulaiDipilih == jam;
+                          bool isDisabled = jamSudahDipesan.contains(jam);
+                          return ChoiceChip(
+                            label: Text(jam),
+                            selected: isSelected,
+                            onSelected: isDisabled ? null : (_) => setState(() => jamMulaiDipilih = jam),
+                            selectedColor: primaryGreen,
+                            disabledColor: Colors.grey[300],
+                            backgroundColor: Colors.white,
+                            elevation: isSelected ? 3 : 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            elevation: 3,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton.icon(
-                          onPressed: resetForm,
-                          icon: const Icon(Icons.cancel, color: Colors.white),
-                          label: const Text("Batal", style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : isDisabled
+                                      ? Colors.grey
+                                      : Colors.black,
                             ),
-                            elevation: 3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              "Daftar Pesanan",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              elevation: 6,
-              shadowColor: Colors.black.withOpacity(0.1),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: supabase
-                      .from("pesanan")
-                      .select()
-                      .order("created_at", ascending: false) as Future<List<Map<String, dynamic>>>,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Text("Terjadi kesalahan: ${snapshot.error}"),
-                      );
-                    }
-
-                    final pesananDocs = snapshot.data ?? [];
-                    if (pesananDocs.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Center(child: Text("Belum ada pesanan")),
-                      );
-                    }
-
-                    return SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: MaterialStateProperty.all(Colors.green[100]),
-                        border: TableBorder.all(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        columns: const [
-                          DataColumn(label: Text("Nama")),
-                          DataColumn(label: Text("Lapangan")),
-                          DataColumn(label: Text("Tanggal")),
-                          DataColumn(label: Text("Jam")),
-                          DataColumn(label: Text("Durasi")),
-                          DataColumn(label: Text("Total")),
-                          DataColumn(label: Text("Aksi")),
-                        ],
-                        rows: pesananDocs.map((pesanan) {
-                          final tanggalStr = pesanan["tanggal"]?.toString() ?? "";
-                          DateTime? tanggal = tanggalStr.isNotEmpty ? DateTime.tryParse(tanggalStr) : null;
-
-                          return DataRow(cells: [
-                            DataCell(Text(pesanan["nama"] ?? "-")),
-                            DataCell(Text(pesanan["lapangan"] ?? "-")),
-                            DataCell(Text(
-                                tanggal != null ? "${tanggal.day}-${tanggal.month}-${tanggal.year}" : "-")),
-                            DataCell(Text("${pesanan["jamMulai"]} - ${pesanan["jamSelesai"]}")),
-                            DataCell(Text("${pesanan["durasi"]} Jam")),
-                            DataCell(Text("Rp ${formatRupiah.format(pesanan["total"] ?? 0)}")),
-                            DataCell(
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                onPressed: () async {
-                                  final konfirmasi = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text("Konfirmasi Hapus"),
-                                      content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context, false),
-                                          child: const Text("Batal"),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                          onPressed: () => Navigator.pop(context, true),
-                                          child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  if (konfirmasi == true) {
-                                    await supabase.from("pesanan").delete().eq("id", pesanan["id"]);
-                                    if (mounted) setState(() {});
-                                  }
-                                },
-                              ),
-                            ),
-                          ]);
+                          );
                         }).toList(),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 18),
+                      DropdownButtonFormField<int>(
+                        value: durasiController.text.isNotEmpty
+                            ? int.tryParse(durasiController.text)
+                            : null,
+                        items: [1, 2, 3, 4]
+                            .map((d) => DropdownMenuItem(value: d, child: Text("$d Jam")))
+                            .toList(),
+                        onChanged: (val) {
+                          if (val != null) durasiController.text = val.toString();
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Durasi",
+                          prefixIcon: const Icon(Icons.timer_outlined),
+                          border: roundedBorder,
+                        ),
+                      ),
+                      const SizedBox(height: 26),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: tambahPesanan,
+                            icon: const Icon(Icons.save, color: Colors.white),
+                            label: const Text("Simpan", style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryGreen,
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 3,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton.icon(
+                            onPressed: resetForm,
+                            icon: const Icon(Icons.cancel, color: Colors.white),
+                            label: const Text("Batal", style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 30),
+              Text(
+                "Daftar Pesanan",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                color: cardColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 6,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: supabase
+                        .from("pesanan")
+                        .select()
+                        .order("created_at", ascending: false) as Future<List<Map<String, dynamic>>>,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text("Terjadi kesalahan: ${snapshot.error}"),
+                        );
+                      }
+
+                      final pesananDocs = snapshot.data ?? [];
+                      if (pesananDocs.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Center(child: Text("Belum ada pesanan")),
+                        );
+                      }
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowColor: MaterialStateProperty.all(Colors.green[100]),
+                          border: TableBorder.all(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          columns: const [
+                            DataColumn(label: Text("Nama")),
+                            DataColumn(label: Text("Lapangan")),
+                            DataColumn(label: Text("Tanggal")),
+                            DataColumn(label: Text("Jam")),
+                            DataColumn(label: Text("Durasi")),
+                            DataColumn(label: Text("Total")),
+                            DataColumn(label: Text("Aksi")),
+                          ],
+                          rows: pesananDocs.map((data) {
+                            final total = data["total"] ?? 0;
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(data["nama"] ?? "-")),
+                                DataCell(Text(data["lapangan"] ?? "-")),
+                                DataCell(Text(data["tanggal"] ?? "-")),
+                                DataCell(Text("${data["jamMulai"]} - ${data["jamSelesai"]}")),
+                                DataCell(Text("${data["durasi"] ?? 0} jam")),
+                                DataCell(Text("Rp ${formatRupiah.format(total)}")),
+                                DataCell(
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      await supabase.from("pesanan").delete().eq("id", data["id"]);
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

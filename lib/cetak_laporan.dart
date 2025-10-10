@@ -82,7 +82,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     return DateFormat("dd-MM-yyyy").format(dt);
   }
 
-  num _toNum(dynamic raw) { 
+  num _toNum(dynamic raw) {
     if (raw == null) return 0;
     if (raw is num) return raw;
     if (raw is String) {
@@ -101,24 +101,14 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return [
-            pw.Container(
-              alignment: pw.Alignment.centerLeft,
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    "LAPORAN PESANAN LAPANGAN",
-                    style: pw.TextStyle(
-                        fontSize: 18, fontWeight: pw.FontWeight.bold),
-                  ),
-                  if (filterTanggal != null) pw.SizedBox(height: 6),
-                  if (filterTanggal != null)
-                    pw.Text(
-                      "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
-                    ),
-                ],
+            // Judul di PDF DIHAPUS agar tidak double
+            if (filterTanggal != null)
+              pw.Container(
+                alignment: pw.Alignment.centerLeft,
+                child: pw.Text(
+                  "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
+                ),
               ),
-            ),
             pw.SizedBox(height: 16),
             pw.Table.fromTextArray(
               headers: ["Nama", "Lapangan", "Tanggal", "Jam", "Durasi", "Total"],
@@ -229,12 +219,8 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
       backgroundColor: Colors.green.shade100,
       appBar: AppBar(
         backgroundColor: primary,
-        elevation: 3,
-        title: const Text(
-          "Cetak Laporan",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
+        elevation: 0,
+        toolbarHeight: 0, // Hilangkan tampilan AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
