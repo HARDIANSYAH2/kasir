@@ -174,6 +174,8 @@ class _LoginPageState extends State<LoginPage> {
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.8),
                               hintText: "Email",
+                              hintStyle: TextStyle(
+                                  color: Colors.black.withOpacity(0.4)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -203,6 +205,10 @@ class _LoginPageState extends State<LoginPage> {
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.8),
                               hintText: "Password",
+                              hintStyle: TextStyle(
+                                color: Colors.black
+                                    .withOpacity(0.4), 
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -215,8 +221,9 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed:
-                                  isButtonActive && !isLoading ? handleLogin : null,
+                              onPressed: isButtonActive && !isLoading
+                                  ? handleLogin
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isButtonActive
                                     ? const Color(0xFF4DC88B)

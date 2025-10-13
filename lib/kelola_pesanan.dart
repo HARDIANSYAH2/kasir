@@ -36,7 +36,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   List<Map<String, dynamic>> daftarLapangan = [];
   Map<String, dynamic>? lapanganDipilihLocal;
 
-  final Color bgColor = const Color(0xFFDFF4DF);
+  final Color bgColor = const Color.fromARGB(255, 255, 255, 255);
   final Color cardColor = const Color(0xFFE9F8E9);
   final Color primaryGreen = const Color(0xFF2E7D32);
 
@@ -241,8 +241,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Batal"),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Batal",style: TextStyle(color: Colors.black),),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -289,19 +289,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Text(
-                  "Status: $_statusLapangan",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: (_statusLapangan == "Tidak Tersedia")
-                        ? Colors.red
-                        : primaryGreen,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               // ================= FORM TAMBAH PESANAN ================= \\
               Card(
                 color: cardColor,
@@ -319,7 +306,21 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                           color: primaryGreen,
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      Center(
+                        child: Text(
+                          "Status: $_statusLapangan",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: (_statusLapangan == "Tidak Tersedia")
+                                ? Colors.red
+                                : primaryGreen,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 20),
+
                       TextField(
                         controller: namaController,
                         decoration: InputDecoration(
@@ -431,6 +432,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         ),
                       ),
                       const SizedBox(height: 26),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -467,6 +469,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 30),
               // ================= DAFTAR PESANAN ================= \\
               Text(
@@ -509,45 +512,31 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         );
                       }
 
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(Colors.green[100]),
-                          border: TableBorder.all(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          columns: const [
-                            DataColumn(label: Text("Nama")),
-                            DataColumn(label: Text("Lapangan")),
-                            DataColumn(label: Text("Tanggal")),
-                            DataColumn(label: Text("Jam")),
-                            DataColumn(label: Text("Durasi")),
-                            DataColumn(label: Text("Total")),
-                            DataColumn(label: Text("Aksi")),
-                          ],
-                          rows: pesananDocs.map((data) {
-                            final total = data["total"] ?? 0;
-                            return DataRow(
-                              cells: [
-                                DataCell(Text(data["nama"] ?? "-")),
-                                DataCell(Text(data["lapangan"] ?? "-")),
-                                DataCell(Text(data["tanggal"] ?? "-")),
-                                DataCell(Text("${data["jamMulai"]} - ${data["jamSelesai"]}")),
-                                DataCell(Text("${data["durasi"] ?? 0} jam")),
-                                DataCell(Text("Rp ${formatRupiah.format(total)}")),
-                                DataCell(
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-                                      await hapusPesanan(data["id"].toString());
-                                    },
-                                  ),
+                      return Column(
+                        children: pesananDocs.map((data) {
+                          return ListTile(
+                            title: Text(
+                              data["nama"] ?? "",
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              "${data["lapangan"] ?? "-"} • ${data["tanggal"] ?? "-"} • ${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"} • ${data["durasi"]} jam",
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Rp ${formatRupiah.format(data["total"] ?? 0)}",
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => hapusPesanan(data["id"].toString()),
                                 ),
                               ],
-                            );
-                          }).toList(),
-                        ),
+                            ),
+                          );
+                        }).toList(),
                       );
                     },
                   ),

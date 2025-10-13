@@ -197,7 +197,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFDFF4DF), 
+      color: const Color.fromARGB(255, 255, 255, 255), 
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -207,7 +207,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
             const SizedBox(height: 50),
             const Text(
               "Daftar Lapangan",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 43, 141, 47)),
             ),
             const SizedBox(height: 20),
             _dataTableWidget(),
@@ -229,12 +230,14 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _editingId == null ? "Tambah Data Lapangan" : "Ubah Data Lapangan",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.green.shade800,
+            Center(
+              child: Text(
+                _editingId == null ? "Tambah Data Lapangan" : "Ubah Data Lapangan",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.green.shade800,
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -347,106 +350,113 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  Widget _dataTableWidget() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: supabase.from("lapangan").select().order("created_at"),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Text("Terjadi kesalahan: ${snapshot.error}");
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text("Belum ada data lapangan.");
-        }
-
-        final lapanganList = snapshot.data!;
+ Widget _dataTableWidget() {
+  return FutureBuilder<List<Map<String, dynamic>>>(
+    future: supabase.from("lapangan").select().order("created_at"),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (snapshot.hasError) {
+        return Text("Terjadi kesalahan: ${snapshot.error}");
+      }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
         return Container(
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
+            color: const Color(0xFFDFF4DF), 
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowColor:
-                    MaterialStateProperty.all(Colors.green.shade50),
-                border: TableBorder.all(color: Colors.green.shade100),
-                columns: const [
-                  DataColumn(label: Text("No")),
-                  DataColumn(label: Text("Gambar")),
-                  DataColumn(label: Text("Nama")),
-                  DataColumn(label: Text("Nomor")),
-                  DataColumn(label: Text("Harga / Jam")),
-                  DataColumn(label: Text("Status")),
-                  DataColumn(label: Text("Aksi")),
-                ],
-                rows: List.generate(lapanganList.length, (index) {
-                  final lapangan = lapanganList[index];
-                  final harga = int.tryParse(
-                          lapangan["harga_perjam"]?.toString() ?? "0") ??
-                      0;
-                  final gambarUrl = lapangan["gambar_url"]?.toString() ?? "";
-
-                  return DataRow(
-                    cells: [
-                      DataCell(Text("${index + 1}")),
-                      DataCell(
-                        (gambarUrl.isNotEmpty)
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  gambarUrl,
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : const Icon(Icons.image_not_supported),
-                      ),
-                      DataCell(Text(lapangan["nama"] ?? "")),
-                      DataCell(Text(lapangan["nomor"] ?? "")),
-                      DataCell(Text(rupiahFormat.format(harga))),
-                      DataCell(Text(lapangan["status"] ?? "Tersedia")),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit,
-                                  color: Colors.blueAccent),
-                              tooltip: "Edit",
-                              onPressed: () => _editLapangan(lapangan),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete,
-                                  color: Colors.redAccent),
-                              tooltip: "Hapus",
-                              onPressed: () => _konfirmasiHapus(
-                                  lapangan["id"].toString()),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-              ),
-            ),
+          child: const Center(
+            child: Text("Belum ada data lapangan."),
           ),
         );
-      },
-    );
-  }
+      }
+
+      final lapanganList = snapshot.data!;
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFDFF4DF), 
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor:
+                  MaterialStateProperty.all(Colors.green.shade200),
+              dataRowColor:
+                  MaterialStateProperty.all(Colors.green.shade50),
+              columnSpacing: 20,
+              border: TableBorder.symmetric(
+                inside: BorderSide(color: Colors.green.shade100),
+              ),
+              columns: const [
+                DataColumn(label: Text("No")),
+                DataColumn(label: Text("Gambar")),
+                DataColumn(label: Text("Nama")),
+                DataColumn(label: Text("Nomor")),
+                DataColumn(label: Text("Harga / Jam")),
+                DataColumn(label: Text("Status")),
+                DataColumn(label: Text("Aksi")),
+              ],
+              rows: List.generate(lapanganList.length, (index) {
+                final lapangan = lapanganList[index];
+                final harga = int.tryParse(
+                        lapangan["harga_perjam"]?.toString() ?? "0") ??
+                    0;
+                final gambarUrl = lapangan["gambar_url"]?.toString() ?? "";
+
+                return DataRow(
+                  cells: [
+                    DataCell(Text("${index + 1}")),
+                    DataCell(
+                      (gambarUrl.isNotEmpty)
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                gambarUrl,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.image_not_supported),
+                    ),
+                    DataCell(Text(lapangan["nama"] ?? "-")),
+                    DataCell(Text(lapangan["nomor"] ?? "-")),
+                    DataCell(Text(rupiahFormat.format(harga))),
+                    DataCell(Text(lapangan["status"] ?? "Tersedia")),
+                    DataCell(
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit,
+                                color: Color.fromARGB(255, 61, 145, 65)),
+                            tooltip: "Edit",
+                            onPressed: () => _editLapangan(lapangan),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            tooltip: "Hapus",
+                            onPressed: () =>
+                                _konfirmasiHapus(lapangan["id"].toString()),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 
   Widget _textFieldInside(String label, TextEditingController controller,
       {TextInputType inputType = TextInputType.text}) {
@@ -458,6 +468,13 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
         labelStyle: const TextStyle(color: Colors.black54),
         filled: true,
         fillColor: Colors.green.shade50,
+        prefixIcon: Icon(
+          label == "Nomor Lapangan"
+          ? Icons.onetwothree_rounded
+          : label == "Harga Perjam"
+             ? Icons.attach_money
+             : Icons.edit_note,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
         ),

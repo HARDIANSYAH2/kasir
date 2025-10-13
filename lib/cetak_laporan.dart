@@ -101,17 +101,41 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return [
-            // Judul di PDF DIHAPUS agar tidak double \\
-            if (filterTanggal != null)
-              pw.Container(
-                alignment: pw.Alignment.centerLeft,
-                child: pw.Text(
-                  "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
+            // Judul Tengah \\
+            pw.Center(
+              child: pw.Text(
+                "LAPORAN PESANAN LAPANGAN",
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
                 ),
               ),
+            ),
+
+            // Periode di bawah judul \\
+            if (filterTanggal != null)
+              pw.Center(
+                child: pw.Text(
+                  "Periode: ${DateFormat("dd-MM-yyyy").format(filterTanggal!.start)} s.d ${DateFormat("dd-MM-yyyy").format(filterTanggal!.end)}",
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    color: PdfColors.grey700,
+                  ),
+                ),
+              ),
+
             pw.SizedBox(height: 16),
+
+            // Tabel Data \\
             pw.Table.fromTextArray(
-              headers: ["Nama", "Lapangan", "Tanggal", "Jam", "Durasi", "Total"],
+              headers: [
+                "Nama",
+                "Lapangan",
+                "Tanggal",
+                "Jam",
+                "Durasi",
+                "Total"
+              ],
               data: dataFiltered.map((pesanan) {
                 final tglStr = _formatTanggal(pesanan["tanggal"]);
                 final durasi = pesanan["durasi"] ?? "-";
@@ -128,21 +152,26 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                 ];
               }).toList(),
               headerStyle: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.white,
+              ),
               headerDecoration: pw.BoxDecoration(color: PdfColors.green800),
               cellAlignment: pw.Alignment.centerLeft,
               cellStyle: const pw.TextStyle(fontSize: 10),
               border: pw.TableBorder.all(width: 0.3, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 12),
+
+            //Total Keseluruhan\\
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Text(
-                    "Total Keseluruhan: ${formatRupiah.format(totalKeseluruhan)}",
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  "Total Keseluruhan: ${formatRupiah.format(totalKeseluruhan)}",
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
               ],
-            )
+            ),
           ];
         },
       ),
@@ -288,17 +317,17 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                         horizontal: 16, vertical: 12),
                   ),
                   onPressed: () async {
-                    final picked = await showDateRangePicker(
+                    final picked = await showDatePicker(
                       context: context,
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2100),
-                      initialDateRange: filterTanggal ??
-                          DateTimeRange(
-                              start: DateTime.now(), end: DateTime.now()),
+                      initialDate: filterTanggal?.start ?? DateTime.now(),
                     );
+
                     if (picked != null) {
                       setState(() {
-                        filterTanggal = picked;
+                        filterTanggal =
+                            DateTimeRange(start: picked, end: picked);
                       });
                       await ambilDataPesanan();
                     }
@@ -344,8 +373,9 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8))),
-                  onPressed:
-                      dataFiltered.isEmpty ? null : () => cetakPDF(dataFiltered),
+                  onPressed: dataFiltered.isEmpty
+                      ? null
+                      : () => cetakPDF(dataFiltered),
                   icon: const Icon(Icons.print),
                   label: const Text('Cetak'),
                 ),
@@ -385,9 +415,8 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                     headingRowHeight: 56,
                                     dataRowHeight: 56,
                                     columnSpacing: 28,
-                                    headingRowColor:
-                                        MaterialStateProperty.all(
-                                            Colors.green.shade200),
+                                    headingRowColor: MaterialStateProperty.all(
+                                        Colors.green.shade200),
                                     border: TableBorder.symmetric(
                                         inside: BorderSide(
                                             color: Colors.green.shade100),
@@ -407,12 +436,12 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                             _formatTanggal(pesanan['tanggal']);
                                         final jam =
                                             '${pesanan['jamMulai'] ?? ''} - ${pesanan['jamSelesai'] ?? ''}';
-                                        final durasi =
-                                            pesanan['durasi'] ?? '-';
+                                        final durasi = pesanan['durasi'] ?? '-';
                                         final total = _toNum(pesanan['total']);
 
                                         return DataRow(cells: [
-                                          DataCell(Text(pesanan['nama'] ?? '-')),
+                                          DataCell(
+                                              Text(pesanan['nama'] ?? '-')),
                                           DataCell(
                                               Text(pesanan['lapangan'] ?? '-')),
                                           DataCell(Text(tglStr)),
@@ -435,15 +464,13 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                             formatRupiah
                                                 .format(totalKeseluruhan),
                                             style: const TextStyle(
-                                                fontWeight:
-                                                FontWeight.bold))),
-                                                
-                              ])
-                           ],
-                        ),
-                      ),
-                    ),
-                  ),
+                                                fontWeight: FontWeight.bold))),
+                                      ])
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                 ),
               ),
             ),
