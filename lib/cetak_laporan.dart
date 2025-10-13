@@ -101,7 +101,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return [
-            // Judul di PDF DIHAPUS agar tidak double
+            // Judul di PDF DIHAPUS agar tidak double \\
             if (filterTanggal != null)
               pw.Container(
                 alignment: pw.Alignment.centerLeft,
@@ -436,13 +436,14 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                                 .format(totalKeseluruhan),
                                             style: const TextStyle(
                                                 fontWeight:
-                                                    FontWeight.bold))),
-                                      ])
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                                                FontWeight.bold))),
+                                                
+                              ])
+                           ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

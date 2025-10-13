@@ -39,6 +39,4 @@ flutter:
 
   assets:
     - assets/images/logo.jpg
-    - assets/images/lapangan1.jpg
-    - assets/images/lapangan2.jpg
-    - assets/images/lapangan3.jpg
+   

@@ -233,6 +233,35 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     }
   }
 
+  Future<void> hapusPesanan(String id) async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Konfirmasi Hapus"),
+        content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi == true) {
+      await supabase.from("pesanan").delete().eq("id", id);
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pesanan berhasil dihapus")),
+      );
+    }
+  }
+
   void resetForm() {
     setState(() {
       namaController.clear();
@@ -273,6 +302,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                 ),
               ),
               const SizedBox(height: 20),
+              // ================= FORM TAMBAH PESANAN ================= \\
               Card(
                 color: cardColor,
                 elevation: 6,
@@ -438,6 +468,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                 ),
               ),
               const SizedBox(height: 30),
+              // ================= DAFTAR PESANAN ================= \\
               Text(
                 "Daftar Pesanan",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen),
@@ -509,8 +540,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                                   IconButton(
                                     icon: const Icon(Icons.delete, color: Colors.red),
                                     onPressed: () async {
-                                      await supabase.from("pesanan").delete().eq("id", data["id"]);
-                                      setState(() {});
+                                      await hapusPesanan(data["id"].toString());
                                     },
                                   ),
                                 ),
