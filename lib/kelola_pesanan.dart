@@ -471,7 +471,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
               ),
 
               const SizedBox(height: 30),
-              // ================= DAFTAR PESANAN ================= \\
+              /// ================= DAFTAR PESANAN ================= \\\
               Text(
                 "Daftar Pesanan",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
@@ -515,7 +515,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
-                          headingRowColor: WidgetStatePropertyAll(primaryGreen.withOpacity(0.1)),
+                          headingRowColor: WidgetStatePropertyAll(primaryGreen.withOpacity(0.3)),
                           columns: const [
                             DataColumn(label: Text("Nama")),
                             DataColumn(label: Text("Lapangan")),
