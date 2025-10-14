@@ -208,7 +208,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
             const Text(
               "Daftar Lapangan",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 43, 141, 47)),
+              color: Color.fromARGB(255, 0, 0, 0)),
             ),
             const SizedBox(height: 20),
             _dataTableWidget(),
@@ -236,7 +236,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: Colors.green.shade800,
+                  color: const Color.fromARGB(255, 0, 0, 0),
                 ),
               ),
             ),

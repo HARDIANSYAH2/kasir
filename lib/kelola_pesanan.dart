@@ -25,9 +25,9 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   String? jamMulaiDipilih;
 
   final List<String> jamPilihan = [
-    "08:00","09:00","10:00","11:00","12:00",
-    "13:00","14:00","15:00","16:00","17:00",
-    "18:00","19:00","20:00","21:00"
+    "08:00", "09:00", "10:00", "11:00", "12:00",
+    "13:00", "14:00", "15:00", "16:00", "17:00",
+    "18:00", "19:00", "20:00", "21:00"
   ];
 
   List<String> jamSudahDipesan = [];
@@ -233,34 +233,34 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     }
   }
 
-  Future<void> hapusPesanan(String id) async {
-    final konfirmasi = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Konfirmasi Hapus"),
-        content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Batal",style: TextStyle(color: Colors.black),),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+ Future<void> hapusPesanan(String id) async {
+  final konfirmasi = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Konfirmasi Hapus"),
+      content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text("Batal", style: TextStyle(color: Colors.black)),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+          child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
 
-    if (konfirmasi == true) {
-      await supabase.from("pesanan").delete().eq("id", id);
-      setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Pesanan berhasil dihapus")),
-      );
-    }
+  if (konfirmasi == true) { 
+    await supabase.from("pesanan").delete().eq("id", id);
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Pesanan berhasil dihapus")),
+    );
   }
+}
 
   void resetForm() {
     setState(() {
@@ -303,7 +303,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: primaryGreen,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -474,7 +474,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
               // ================= DAFTAR PESANAN ================= \\
               Text(
                 "Daftar Pesanan",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               const SizedBox(height: 10),
               Card(
@@ -512,31 +512,36 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         );
                       }
 
-                      return Column(
-                        children: pesananDocs.map((data) {
-                          return ListTile(
-                            title: Text(
-                              data["nama"] ?? "",
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              "${data["lapangan"] ?? "-"} • ${data["tanggal"] ?? "-"} • ${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"} • ${data["durasi"]} jam",
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  "Rp ${formatRupiah.format(data["total"] ?? 0)}",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowColor: WidgetStatePropertyAll(primaryGreen.withOpacity(0.1)),
+                          columns: const [
+                            DataColumn(label: Text("Nama")),
+                            DataColumn(label: Text("Lapangan")),
+                            DataColumn(label: Text("Tanggal")),
+                            DataColumn(label: Text("Jam")),
+                            DataColumn(label: Text("Durasi")),
+                            DataColumn(label: Text("Total")),
+                            DataColumn(label: Text("Aksi")),
+                          ],
+                          rows: pesananDocs.map((data) {
+                            return DataRow(cells: [
+                              DataCell(Text(data["nama"] ?? "-")),
+                              DataCell(Text(data["lapangan"] ?? "-")),
+                              DataCell(Text(data["tanggal"] ?? "-")),
+                              DataCell(Text("${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}")),
+                              DataCell(Text("${data["durasi"] ?? 0} Jam")),
+                              DataCell(Text("Rp ${formatRupiah.format(data["total"] ?? 0)}")),
+                              DataCell(
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () => hapusPesanan(data["id"].toString()),
                                 ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                              ),
+                            ]);
+                          }).toList(),
+                        ),
                       );
                     },
                   ),

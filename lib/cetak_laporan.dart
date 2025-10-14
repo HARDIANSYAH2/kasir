@@ -249,13 +249,13 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
       appBar: AppBar(
         backgroundColor: primary,
         elevation: 0,
-        toolbarHeight: 0, // Hilangkan tampilan AppBar
+        toolbarHeight: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // --- CARD RINGKASAN ---
+            // --- CARD RINGKASAN --- \\
             Card(
               color: cardBg,
               elevation: 4,
@@ -275,7 +275,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                               style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: primary)),
+                                  color: Colors.black)),
                           const SizedBox(height: 6),
                           Text(
                             filterTanggal == null
