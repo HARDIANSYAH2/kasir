@@ -397,6 +397,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                             label: Text(jam),
                             selected: isSelected,
                             onSelected: isDisabled ? null : (_) => setState(() => jamMulaiDipilih = jam),
+                            showCheckmark: false,
                             selectedColor: primaryGreen,
                             disabledColor: Colors.grey[300],
                             backgroundColor: Colors.white,
