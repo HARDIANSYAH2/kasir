@@ -206,8 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                               fillColor: Colors.white.withOpacity(0.8),
                               hintText: "Password",
                               hintStyle: TextStyle(
-                                color: Colors.black
-                                    .withOpacity(0.4), 
+                                color: Colors.black.withOpacity(0.4),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),

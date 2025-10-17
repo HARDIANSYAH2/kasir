@@ -315,7 +315,10 @@ class _DashboardPageState extends State<DashboardPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Batal",style: TextStyle(color: Colors.black),),
+              child: const Text(
+                "Batal",
+                style: TextStyle(color: Colors.black),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
