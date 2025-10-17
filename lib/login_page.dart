@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.user != null) {
-        // Login berhasil, arahkan ke dashboard 
+        /// ====== Login berhasil, arahkan ke dashboard ====== \\\
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Row(
         children: [
-          // Bagian kiri (Logo dan teks)
+          /// ====== Bagian kiri (Logo dan teks)  ====== \\\
           Expanded(
             flex: 1,
             child: Container(
@@ -122,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Bagian kanan (form login)
+          /// ====== Bagian kanan (form login) ====== \\\
           Expanded(
             flex: 1,
             child: Container(
@@ -165,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 25),
 
-                          // Email Field
+                          /// ====== Email Field ====== \\\
                           TextField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -184,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 15),
 
-                          // Password Field
+                          /// ====== Password Field ====== \\\
                           TextField(
                             controller: passwordController,
                             obscureText: !isPasswordVisible,
@@ -217,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 25),
 
-                          // Tombol Login
+                          /// ====== Tombol Login ====== \\\
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(

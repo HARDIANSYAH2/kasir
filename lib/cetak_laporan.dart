@@ -162,7 +162,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             ),
             pw.SizedBox(height: 12),
 
-            //Total Keseluruhan\\
+            // ===== Total Keseluruhan ===== \\
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
@@ -305,7 +305,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             ),
             const SizedBox(height: 18),
 
-            // --- FILTER & SEARCH ---
+            // --- FILTER & SEARCH --- \\
             Row(
               children: [
                 ElevatedButton.icon(
@@ -383,7 +383,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             ),
             const SizedBox(height: 18),
 
-            // --- TABEL DATA ---
+            /// --- TABEL DATA --- \\\
             Expanded(
               child: Card(
                 shape: RoundedRectangleBorder(
