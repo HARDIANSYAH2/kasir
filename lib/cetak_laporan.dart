@@ -101,7 +101,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return [
-            /// Judul Tengah \\\
             pw.Center(
               child: pw.Text(
                 "LAPORAN PESANAN LAPANGAN",
@@ -112,7 +111,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
               ),
             ),
 
-            // Periode di bawah judul \\
+           
             if (filterTanggal != null)
               pw.Center(
                 child: pw.Text(
@@ -126,7 +125,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
 
             pw.SizedBox(height: 16),
 
-            // Tabel Data \\
+            
             pw.Table.fromTextArray(
               headers: [
                 "Nama",
@@ -162,7 +161,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             ),
             pw.SizedBox(height: 12),
 
-            // ===== Total Keseluruhan ===== \\
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
@@ -255,7 +253,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // --- CARD RINGKASAN --- \\
             Card(
               color: cardBg,
               elevation: 4,
@@ -304,8 +301,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
               ),
             ),
             const SizedBox(height: 18),
-
-            // --- FILTER & SEARCH --- \\
             Row(
               children: [
                 ElevatedButton.icon(
@@ -383,7 +378,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             ),
             const SizedBox(height: 18),
 
-            /// --- TABEL DATA --- \\\
+          
             Expanded(
               child: Card(
                 shape: RoundedRectangleBorder(

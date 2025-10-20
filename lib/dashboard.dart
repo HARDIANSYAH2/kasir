@@ -37,7 +37,6 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       body: Row(
         children: [
-          // ==== Sidebar ==== \\
           Container(
             width: 220,
             color: const Color(0xFF4CAF7C),
@@ -58,7 +57,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-          // ==== Konten Utama ==== \\
+          
           Expanded(
             child: Column(
               children: [
@@ -87,7 +86,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  /// ==== Sidebar Item ==== \\
+  
   Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu,
       {bool isLogout = false}) {
     final bool isActive = menuAktif == menu;
@@ -129,7 +128,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  /// ==== Judul Halaman ==== \\
+  
   String _getJudulHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -143,7 +142,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  /// ==== Konten Halaman ==== \\
+
   Widget _getKontenHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -201,7 +200,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  /// ==== Kartu Lapangan ==== \\
+
   Widget _lapanganCard(Map<String, dynamic> item) {
     final bool available =
         (item["status"]?.toString().toLowerCase() ?? "") == "tersedia";
@@ -279,14 +278,14 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  /// ==== Refresh setelah booking selesai ==== \\
+  
   void _refreshLapangan() {
     setState(() {
       menuAktif = DashboardMenu.dashboard;
     });
   }
 
-  /// ==== Ambil Data Lapangan dari Supabase ==== \\
+  
   Future<List<Map<String, dynamic>>> _getLapangan() async {
     final response = await supabase
         .from("lapangan")
@@ -296,7 +295,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// ==== Dialog Logout ==== \\
+
   void _showLogoutDialog() {
     showDialog(
       context: context,

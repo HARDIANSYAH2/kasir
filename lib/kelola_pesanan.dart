@@ -289,7 +289,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ================= FORM TAMBAH PESANAN ================= \\
               Card(
                 color: cardColor,
                 elevation: 6,
@@ -320,7 +319,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
                       TextField(
                         controller: namaController,
                         decoration: InputDecoration(
@@ -472,7 +470,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
               ),
 
               const SizedBox(height: 30),
-              /// ================= DAFTAR PESANAN ================= \\\
               Text(
                 "Daftar Pesanan",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
