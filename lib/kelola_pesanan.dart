@@ -25,9 +25,20 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
   String? jamMulaiDipilih;
 
   final List<String> jamPilihan = [
-    "08:00", "09:00", "10:00", "11:00", "12:00",
-    "13:00", "14:00", "15:00", "16:00", "17:00",
-    "18:00", "19:00", "20:00", "21:00"
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00",
+    "19:00",
+    "20:00",
+    "21:00"
   ];
 
   List<String> jamSudahDipesan = [];
@@ -94,7 +105,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     try {
       final targetTanggal = tanggal ?? DateTime.now();
       final lapanganId = lapanganDipilihLocal!["id"];
-      final startOfDay = DateTime(targetTanggal.year, targetTanggal.month, targetTanggal.day);
+      final startOfDay =
+          DateTime(targetTanggal.year, targetTanggal.month, targetTanggal.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
       final startStr = startOfDay.toIso8601String().split('T').first;
@@ -118,7 +130,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         if (jamMulai != null && tanggalStr != null) {
           final parts = jamMulai.split(":");
           int hour = int.tryParse(parts[0]) ?? 0;
-          DateTime bookingStart = DateTime.parse(tanggalStr).add(Duration(hours: hour));
+          DateTime bookingStart =
+              DateTime.parse(tanggalStr).add(Duration(hours: hour));
           DateTime bookingEnd = bookingStart.add(Duration(hours: durasi));
           if (bookingEnd.isAfter(sekarang)) {
             for (int i = 0; i < durasi; i++) {
@@ -137,17 +150,18 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         }
       }
 
-      bool semuaJamTidakTersedia = jamBooked.toSet().length >= jamPilihan.length;
+      bool semuaJamTidakTersedia =
+          jamBooked.toSet().length >= jamPilihan.length;
 
-      await supabase
-          .from("lapangan")
-          .update({"status": semuaJamTidakTersedia ? "Tidak Tersedia" : "Tersedia"})
-          .eq("id", lapanganId);
+      await supabase.from("lapangan").update({
+        "status": semuaJamTidakTersedia ? "Tidak Tersedia" : "Tersedia"
+      }).eq("id", lapanganId);
 
       if (mounted) {
         setState(() {
           jamSudahDipesan = jamBooked.toSet().toList();
-          _statusLapangan = semuaJamTidakTersedia ? "Tidak Tersedia" : "Tersedia";
+          _statusLapangan =
+              semuaJamTidakTersedia ? "Tidak Tersedia" : "Tersedia";
         });
       }
     } catch (e) {
@@ -186,10 +200,12 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
           .eq("tanggal", tanggalString);
 
       for (var data in cekBentrok) {
-        int existingMulai = int.parse(data["jamMulai"].toString().split(":")[0]);
+        int existingMulai =
+            int.parse(data["jamMulai"].toString().split(":")[0]);
         int existingDurasi = int.tryParse(data["durasi"].toString()) ?? 1;
         int existingSelesai = existingMulai + existingDurasi;
-        bool bentrok = (mulaiBaru < existingSelesai && selesaiBaru > existingMulai);
+        bool bentrok =
+            (mulaiBaru < existingSelesai && selesaiBaru > existingMulai);
         if (bentrok) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Jam ini sudah dibooking")),
@@ -199,15 +215,20 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       }
 
       int hargaPerJam = int.tryParse(
-            (lapanganDipilihLocal?["harga_perjam"] ?? lapanganDipilihLocal?["harga"]).toString(),
-          ) ?? 0;
+            (lapanganDipilihLocal?["harga_perjam"] ??
+                    lapanganDipilihLocal?["harga"])
+                .toString(),
+          ) ??
+          0;
       int total = hargaPerJam * durasi;
       String jamSelesai = hitungJamSelesai(jamMulaiDipilih!, durasi);
 
       final dataPesanan = {
         "nama": namaController.text,
         "lapanganid": lapanganDipilihLocal?["id"],
-        "lapangan": "${lapanganDipilihLocal?["nama"]} ${lapanganDipilihLocal?["nomor"] ?? ""}".trim(),
+        "lapangan":
+            "${lapanganDipilihLocal?["nama"]} ${lapanganDipilihLocal?["nomor"] ?? ""}"
+                .trim(),
         "tanggal": tanggalString,
         "jamMulai": jamMulaiDipilih,
         "jamSelesai": jamSelesai,
@@ -233,34 +254,34 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     }
   }
 
- Future<void> hapusPesanan(String id) async {
-  final konfirmasi = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text("Konfirmasi Hapus"),
-      content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: const Text("Batal", style: TextStyle(color: Colors.black)),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-          child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ),
-  );
-
-  if (konfirmasi == true) { 
-    await supabase.from("pesanan").delete().eq("id", id);
-    setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Pesanan berhasil dihapus")),
+  Future<void> hapusPesanan(String id) async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Konfirmasi Hapus"),
+        content: const Text("Apakah Anda yakin ingin menghapus pesanan ini?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Batal", style: TextStyle(color: Colors.black)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
+
+    if (konfirmasi == true) {
+      await supabase.from("pesanan").delete().eq("id", id);
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pesanan berhasil dihapus")),
+      );
+    }
   }
-}
 
   void resetForm() {
     setState(() {
@@ -292,7 +313,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
               Card(
                 color: cardColor,
                 elevation: 6,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -338,7 +360,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         }).toList(),
                         onChanged: (val) async {
                           setState(() => lapanganDipilihLocal = val);
-                          await ambilJamYangSudahDipesan(tanggalMain ?? DateTime.now());
+                          await ambilJamYangSudahDipesan(
+                              tanggalMain ?? DateTime.now());
                         },
                         decoration: InputDecoration(
                           labelText: "Pilih Lapangan",
@@ -366,7 +389,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: "Tanggal Main",
-                            prefixIcon: const Icon(Icons.calendar_today_outlined),
+                            prefixIcon:
+                                const Icon(Icons.calendar_today_outlined),
                             border: roundedBorder,
                           ),
                           child: Text(
@@ -394,7 +418,9 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                           return ChoiceChip(
                             label: Text(jam),
                             selected: isSelected,
-                            onSelected: isDisabled ? null : (_) => setState(() => jamMulaiDipilih = jam),
+                            onSelected: isDisabled
+                                ? null
+                                : (_) => setState(() => jamMulaiDipilih = jam),
                             showCheckmark: false,
                             selectedColor: primaryGreen,
                             disabledColor: Colors.grey[300],
@@ -419,10 +445,12 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                             ? int.tryParse(durasiController.text)
                             : null,
                         items: [1, 2, 3, 4]
-                            .map((d) => DropdownMenuItem(value: d, child: Text("$d Jam")))
+                            .map((d) => DropdownMenuItem(
+                                value: d, child: Text("$d Jam")))
                             .toList(),
                         onChanged: (val) {
-                          if (val != null) durasiController.text = val.toString();
+                          if (val != null)
+                            durasiController.text = val.toString();
                         },
                         decoration: InputDecoration(
                           labelText: "Durasi",
@@ -431,17 +459,18 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                         ),
                       ),
                       const SizedBox(height: 26),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           ElevatedButton.icon(
                             onPressed: tambahPesanan,
                             icon: const Icon(Icons.save, color: Colors.white),
-                            label: const Text("Simpan", style: TextStyle(color: Colors.white)),
+                            label: const Text("Simpan",
+                                style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryGreen,
-                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 28, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -452,10 +481,12 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                           ElevatedButton.icon(
                             onPressed: resetForm,
                             icon: const Icon(Icons.cancel, color: Colors.white),
-                            label: const Text("Batal", style: TextStyle(color: Colors.white)),
+                            label: const Text("Batal",
+                                style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
-                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 28, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -468,24 +499,28 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
               Text(
                 "Daftar Pesanan",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
               const SizedBox(height: 10),
               Card(
                 color: cardColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
                 elevation: 6,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: FutureBuilder<List<Map<String, dynamic>>>(
                     future: supabase
-                        .from("pesanan")
-                        .select()
-                        .order("created_at", ascending: false) as Future<List<Map<String, dynamic>>>,
+                            .from("pesanan")
+                            .select()
+                            .order("created_at", ascending: false)
+                        as Future<List<Map<String, dynamic>>>,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(
@@ -513,7 +548,8 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
-                          headingRowColor: WidgetStatePropertyAll(primaryGreen.withOpacity(0.3)),
+                          headingRowColor: WidgetStatePropertyAll(
+                              primaryGreen.withOpacity(0.3)),
                           columns: const [
                             DataColumn(label: Text("Nama")),
                             DataColumn(label: Text("Lapangan")),
@@ -528,13 +564,17 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                               DataCell(Text(data["nama"] ?? "-")),
                               DataCell(Text(data["lapangan"] ?? "-")),
                               DataCell(Text(data["tanggal"] ?? "-")),
-                              DataCell(Text("${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}")),
+                              DataCell(Text(
+                                  "${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}")),
                               DataCell(Text("${data["durasi"] ?? 0} Jam")),
-                              DataCell(Text("Rp ${formatRupiah.format(data["total"] ?? 0)}")),
+                              DataCell(Text(
+                                  "Rp ${formatRupiah.format(data["total"] ?? 0)}")),
                               DataCell(
                                 IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => hapusPesanan(data["id"].toString()),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () =>
+                                      hapusPesanan(data["id"].toString()),
                                 ),
                               ),
                             ]);

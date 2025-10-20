@@ -119,7 +119,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-
           Expanded(
             flex: 1,
             child: Container(
@@ -176,7 +175,6 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 15),
                           TextField(
                             controller: passwordController,
@@ -206,7 +204,6 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 25),
                           SizedBox(
                             width: double.infinity,

@@ -110,8 +110,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                 ),
               ),
             ),
-
-           
             if (filterTanggal != null)
               pw.Center(
                 child: pw.Text(
@@ -122,10 +120,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                   ),
                 ),
               ),
-
             pw.SizedBox(height: 16),
-
-            
             pw.Table.fromTextArray(
               headers: [
                 "Nama",
@@ -160,7 +155,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
               border: pw.TableBorder.all(width: 0.3, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 12),
-
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
@@ -377,8 +371,6 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
               ],
             ),
             const SizedBox(height: 18),
-
-          
             Expanded(
               child: Card(
                 shape: RoundedRectangleBorder(

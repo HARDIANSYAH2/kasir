@@ -56,8 +56,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
-
-          
           Expanded(
             child: Column(
               children: [
@@ -86,7 +84,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  
   Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu,
       {bool isLogout = false}) {
     final bool isActive = menuAktif == menu;
@@ -128,7 +125,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  
   String _getJudulHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -141,7 +137,6 @@ class _DashboardPageState extends State<DashboardPage> {
         return "Cetak Laporan";
     }
   }
-
 
   Widget _getKontenHalaman(DashboardMenu menu) {
     switch (menu) {
@@ -199,7 +194,6 @@ class _DashboardPageState extends State<DashboardPage> {
         return const CetakLaporanPage();
     }
   }
-
 
   Widget _lapanganCard(Map<String, dynamic> item) {
     final bool available =
@@ -278,14 +272,12 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  
   void _refreshLapangan() {
     setState(() {
       menuAktif = DashboardMenu.dashboard;
     });
   }
 
-  
   Future<List<Map<String, dynamic>>> _getLapangan() async {
     final response = await supabase
         .from("lapangan")
@@ -294,7 +286,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return List<Map<String, dynamic>>.from(response);
   }
-
 
   void _showLogoutDialog() {
     showDialog(
