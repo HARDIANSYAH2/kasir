@@ -249,7 +249,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
 
     return LayoutBuilder(builder: (context, constraints) {
       bool isMobile = constraints.maxWidth < 600;
-      bool isDesktop = constraints.maxWidth > 900;
 
       return Container(
         color: bgColor,
