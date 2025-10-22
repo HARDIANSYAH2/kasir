@@ -34,58 +34,116 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isDesktop = constraints.maxWidth >= 900;
+
+        return Scaffold(
+          appBar: isDesktop
+              ? null
+              : AppBar(
+                  backgroundColor: const Color(0xFF4CAF7C),
+                  title: Text(_getJudulHalaman(menuAktif)),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: _showLogoutDialog,
+                    ),
+                  ],
+                ),
+          drawer: isDesktop
+              ? null
+              : Drawer(
+                  child: Container(
+                    color: const Color(0xFF4CAF7C),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 60),
+                        _sidebarItem(Icons.home, "Dashboard",
+                            DashboardMenu.dashboard, isDrawer: true),
+                        _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
+                            DashboardMenu.kelolaLapangan,
+                            isDrawer: true),
+                        _sidebarItem(Icons.assignment, "Kelola Pesanan",
+                            DashboardMenu.kelolaPesanan,
+                            isDrawer: true),
+                        _sidebarItem(Icons.print, "Cetak Laporan",
+                            DashboardMenu.cetakLaporan,
+                            isDrawer: true),
+                        const Spacer(),
+                        _sidebarItem(Icons.logout, "Logout", null,
+                            isLogout: true, isDrawer: true),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+          body: isDesktop
+              ? Row(
+                  children: [
+                    _buildSidebar(),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 60,
+                            color: Colors.green.shade100,
+                            alignment: Alignment.centerLeft,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              _getJudulHalaman(menuAktif),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: _getKontenHalaman(menuAktif),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: _getKontenHalaman(menuAktif),
+                ),
+        );
+      },
+    );
+  }
+
+  // Sidebar utama untuk desktop
+  Widget _buildSidebar() {
+    return Container(
+      width: 220,
+      color: const Color(0xFF4CAF7C),
+      child: Column(
         children: [
-          Container(
-            width: 220,
-            color: const Color(0xFF4CAF7C),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                _sidebarItem(Icons.home, "Dashboard", DashboardMenu.dashboard),
-                _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
-                    DashboardMenu.kelolaLapangan),
-                _sidebarItem(Icons.assignment, "Kelola Pesanan",
-                    DashboardMenu.kelolaPesanan),
-                _sidebarItem(
-                    Icons.print, "Cetak Laporan", DashboardMenu.cetakLaporan),
-                const Spacer(),
-                _sidebarItem(Icons.logout, "Logout", null, isLogout: true),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Container(
-                  height: 60,
-                  color: Colors.green.shade100,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    _getJudulHalaman(menuAktif),
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: _getKontenHalaman(menuAktif),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 40),
+          _sidebarItem(Icons.home, "Dashboard", DashboardMenu.dashboard),
+          _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
+              DashboardMenu.kelolaLapangan),
+          _sidebarItem(Icons.assignment, "Kelola Pesanan",
+              DashboardMenu.kelolaPesanan),
+          _sidebarItem(
+              Icons.print, "Cetak Laporan", DashboardMenu.cetakLaporan),
+          const Spacer(),
+          _sidebarItem(Icons.logout, "Logout", null, isLogout: true),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
   Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu,
-      {bool isLogout = false}) {
+      {bool isLogout = false, bool isDrawer = false}) {
     final bool isActive = menuAktif == menu;
 
     return InkWell(
@@ -97,6 +155,7 @@ class _DashboardPageState extends State<DashboardPage> {
             menuAktif = menu;
           });
         }
+        if (isDrawer) Navigator.pop(context);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -149,20 +208,22 @@ class _DashboardPageState extends State<DashboardPage> {
             }
             if (snapshot.hasError) {
               return Center(
-                  child: Text(
-                "Terjadi kesalahan: ${snapshot.error}",
-                textAlign: TextAlign.center,
-              ));
+                child: Text("Terjadi kesalahan: ${snapshot.error}",
+                    textAlign: TextAlign.center),
+              );
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text("Belum ada data lapangan"));
             }
 
             final dataLapangan = snapshot.data!;
-
             return LayoutBuilder(
               builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth < 800 ? 2 : 3;
+                final crossAxisCount = constraints.maxWidth < 600
+                    ? 1
+                    : constraints.maxWidth < 900
+                        ? 2
+                        : 3;
                 return GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
