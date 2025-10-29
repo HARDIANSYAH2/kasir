@@ -91,6 +91,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     return 0;
   }
 
+  /// 🔹 Generate PDF Laporan
   pw.Document generatePDF(List<Map<String, dynamic>> dataFiltered) {
     final pdf = pw.Document();
     final num totalKeseluruhan =
@@ -128,7 +129,8 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                 "Tanggal",
                 "Jam",
                 "Durasi",
-                "Total"
+                "Total",
+                "Pembayaran"
               ],
               data: dataFiltered.map((pesanan) {
                 final tglStr = _formatTanggal(pesanan["tanggal"]);
@@ -136,13 +138,16 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                 final jam =
                     "${pesanan["jamMulai"] ?? ""} - ${pesanan["jamSelesai"] ?? ""}";
                 final total = _toNum(pesanan["total"]);
+                final metode = pesanan["metode_pembayaran"] ?? "-";
+
                 return [
                   pesanan["nama"] ?? "-",
                   pesanan["lapangan"] ?? "-",
                   tglStr,
                   jam,
                   "$durasi Jam",
-                  formatRupiah.format(total)
+                  formatRupiah.format(total),
+                  metode,
                 ];
               }).toList(),
               headerStyle: pw.TextStyle(
@@ -301,29 +306,64 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                   ),
                   onPressed: () async {
-                    final picked = await showDatePicker(
+                    final pickedRange = await showDateRangePicker(
                       context: context,
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2100),
-                      initialDate: filterTanggal?.start ?? DateTime.now(),
+                      initialDateRange: filterTanggal ??
+                          DateTimeRange(
+                            start: DateTime.now(),
+                            end: DateTime.now(),
+                          ),
+                      helpText: 'Pilih Periode Tanggal',
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primary,
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black,
+                            ),
+                          ),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 340,
+                                maxHeight: 440,
+                              ),
+                              child: Material(
+                                type: MaterialType.card,
+                                elevation: 10,
+                                borderRadius: BorderRadius.circular(14),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6.0),
+                                  child: child!,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     );
 
-                    if (picked != null) {
+                    if (pickedRange != null) {
                       setState(() {
-                        filterTanggal =
-                            DateTimeRange(start: picked, end: picked);
+                        filterTanggal = pickedRange;
                       });
                       await ambilDataPesanan();
                     }
                   },
                   icon: const Icon(Icons.date_range, color: Colors.white),
-                  label: const Text('Pilih Periode',
-                      style: TextStyle(color: Colors.white)),
+                  label: const Text(
+                    'Pilih Periode',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -416,6 +456,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                       DataColumn(label: Text('Jam Main')),
                                       DataColumn(label: Text('Durasi')),
                                       DataColumn(label: Text('Total')),
+                                      DataColumn(label: Text('Pembayaran')),
                                     ],
                                     rows: [
                                       ...dataFiltered.map((pesanan) {
@@ -425,6 +466,8 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                             '${pesanan['jamMulai'] ?? ''} - ${pesanan['jamSelesai'] ?? ''}';
                                         final durasi = pesanan['durasi'] ?? '-';
                                         final total = _toNum(pesanan['total']);
+                                        final metode =
+                                            pesanan['metode_pembayaran'] ?? '-';
 
                                         return DataRow(cells: [
                                           DataCell(
@@ -436,23 +479,28 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                                           DataCell(Text('$durasi Jam')),
                                           DataCell(
                                               Text(formatRupiah.format(total))),
+                                          DataCell(Text(metode)),
                                         ]);
                                       }).toList(),
                                       DataRow(cells: [
-                                        DataCell(Text('Total Keseluruhan',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: primary))),
+                                        DataCell(Text(
+                                          'Total Keseluruhan',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: primary),
+                                        )),
                                         const DataCell(Text('')),
                                         const DataCell(Text('')),
                                         const DataCell(Text('')),
                                         const DataCell(Text('')),
                                         DataCell(Text(
-                                            formatRupiah
-                                                .format(totalKeseluruhan),
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold))),
-                                      ])
+                                          formatRupiah.format(totalKeseluruhan),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        )),
+                                        const DataCell(Text(
+                                            '')), 
+                                      ]),
                                     ],
                                   ),
                                 ),
