@@ -17,6 +17,33 @@ class CetakLaporanPage extends StatefulWidget {
 }
 
 class _CetakLaporanPageState extends State<CetakLaporanPage> {
+  
+  String getJudulLaporan() {
+  if (filterTanggal == null) return "Laporan Semua Periode";
+
+  final start = filterTanggal!.start;
+  final end = filterTanggal!.end;
+
+  // Laporan Harian
+  if (start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day) {
+    return "Laporan Harian";
+  }
+
+  // Laporan Mingguan (7 hari)
+  if (end.difference(start).inDays + 1 == 7) {
+    return "Laporan Mingguan";
+  }
+
+  // Laporan Bulanan (bulan & tahun sama)
+  if (start.year == end.year && start.month == end.month) {
+    return "Laporan Bulanan";
+  }
+
+  return "Laporan Per Periode";
+}
+
   final supabase = Supabase.instance.client;
   List<Map<String, dynamic>> dataPesanan = [];
   bool isLoading = true;
@@ -104,7 +131,8 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
           return [
             pw.Center(
               child: pw.Text(
-                "LAPORAN PESANAN LAPANGAN",
+              "${getJudulLaporan().toUpperCase()}",
+
                 style: pw.TextStyle(
                   fontSize: 18,
                   fontWeight: pw.FontWeight.bold,
@@ -267,7 +295,7 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Laporan Pesanan',
+                         Text(getJudulLaporan(),
                               style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,

@@ -114,7 +114,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
     final parts = jamMulai.split(":");
     int hour = int.parse(parts[0]);
     int minute = int.parse(parts[1]);
-    // gunakan tanggal placeholder, hanya jam yang penting
+  
     DateTime mulai = DateTime(2000, 1, 1, hour, minute);
     DateTime selesai = mulai.add(Duration(hours: durasi));
     return "${selesai.hour.toString().padLeft(2, '0')}:${selesai.minute.toString().padLeft(2, '0')}";
@@ -131,7 +131,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
           DateTime(targetTanggal.year, targetTanggal.month, targetTanggal.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Ambil berdasarkan string tanggal (YYYY-MM-DD)
+      
       final startStr =
           "${startOfDay.year.toString().padLeft(4, '0')}-${startOfDay.month.toString().padLeft(2, '0')}-${startOfDay.day.toString().padLeft(2, '0')}";
       final endStr =
@@ -153,7 +153,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         String? tanggalStr = data["tanggal"]?.toString();
 
         if (jamMulai != null && tanggalStr != null) {
-          // parse tanggal stored as YYYY-MM-DD
           DateTime bookingDate = DateTime.parse(tanggalStr);
           final parts = jamMulai.split(":");
           int hour = int.tryParse(parts[0]) ?? 0;
@@ -168,7 +167,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         }
       }
 
-      // Jika target hari adalah hari ini, blok jam yang sudah lewat (termasuk jam sekarang)
+  
       if (targetTanggal.year == sekarang.year &&
           targetTanggal.month == sekarang.month &&
           targetTanggal.day == sekarang.day) {
@@ -181,7 +180,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       bool semuaJamTidakTersedia =
           jamBooked.toSet().length >= jamPilihan.length;
 
-      // Update status lapangan sesuai ketersediaan (opsional)
+    
       try {
         await supabase.from("lapangan").update({
           "status": semuaJamTidakTersedia ? "Tidak Tersedia" : "Tersedia"
@@ -256,19 +255,16 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       int hargaPerJam = int.tryParse(
             (lapanganDipilihLocal?["harga_perjam"] ??
                         lapanganDipilihLocal?["harga"])
-                    ?.toString() ??
-                "0",
-          ) ??
-          0;
+                    ?.toString() ?? "0",
+                    ) ??
+                    0;
       int total = hargaPerJam * durasi;
       String jamSelesai = hitungJamSelesai(jamMulaiDipilih!, durasi);
 
       final dataPesanan = {
         "nama": namaController.text,
         "lapanganid": lapanganDipilihLocal?["id"],
-        "lapangan":
-            "${lapanganDipilihLocal?["nama"]} ${lapanganDipilihLocal?["nomor"] ?? ""}"
-                .trim(),
+        "lapangan": "${lapanganDipilihLocal?["nama"]} ${lapanganDipilihLocal?["nomor"] ?? ""}".trim(),
         "tanggal": tanggalString,
         "jamMulai": jamMulaiDipilih,
         "jamSelesai": jamSelesai,
@@ -349,19 +345,16 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
               pw.Text("Nama Penyewa: ${data["nama"] ?? "-"}"),
               pw.Text("Lapangan: ${data["lapangan"] ?? "-"}"),
               pw.Text("Tanggal Main: ${data["tanggal"] ?? "-"}"),
-              pw.Text(
-                  "Waktu: ${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}"),
+              pw.Text("Waktu: ${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}"),
               pw.Text("Durasi: ${data["durasi"] ?? "0"} Jam"),
               pw.SizedBox(height: 6),
               pw.Text("Metode Pembayaran: ${data["metode_pembayaran"] ?? "-"}"),
               pw.SizedBox(height: 6),
-              pw.Text(
-                "Total: Rp ${formatRupiah.format(data["total"] ?? 0)}",
+              pw.Text("Total: Rp ${formatRupiah.format(data["total"] ?? 0)}",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 8),
-              pw.Text(
-                "Status Pembayaran: ${data["status_pembayaran"] ?? "Belum Lunas"}",
+              pw.Text("Status Pembayaran: ${data["status_pembayaran"] ?? "Belum Lunas"}",
                 style: pw.TextStyle(
                   color: (data["status_pembayaran"] == "Lunas")
                       ? PdfColor.fromInt(0xFF2E7D32)
@@ -574,14 +567,13 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                           int hargaPerJam = int.tryParse(
                                   (lapanganDipilihLocal?["harga_perjam"] ??
                                               lapanganDipilihLocal?["harga"])
-                                          ?.toString() ??
-                                      "0") ??
-                              0;
+                                          ?.toString() ?? "0") ??
+                                          0;
                           int durasi = int.tryParse(
                                   durasiController.text.isEmpty
                                       ? "0"
                                       : durasiController.text) ??
-                              0;
+                                       0;
                           int total = hargaPerJam * durasi;
 
                           return InputDecorator(
@@ -685,6 +677,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                             ),
                           );
                         }
+
                         if (snapshot.hasError) {
                           return Padding(
                             padding: const EdgeInsets.all(20),
@@ -700,7 +693,7 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                           );
                         }
 
-                        return SingleChildScrollView(
+                          return SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -714,8 +707,6 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                               ),
                               dataRowMinHeight: 58,
                               dataRowMaxHeight: 64,
-
-                          
                               border: TableBorder.all(
                                 color: Colors.black54,
                                 width: 1,
@@ -734,33 +725,25 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                               ],
                               rows: pesananDocs.map((data) {
                                 final isLunas =
-                                    (data["status_pembayaran"]?.toString() ==
-                                        "Lunas");
+                                    (data["status_pembayaran"]?.toString() == "Lunas");
                                 return DataRow(
                                   cells: [
-                                    DataCell(
-                                        Text(data["nama"]?.toString() ?? "-")),
-                                    DataCell(Text(
-                                        data["lapangan"]?.toString() ?? "-")),
-                                    DataCell(Text(
-                                        data["tanggal"]?.toString() ?? "-")),
-                                    DataCell(Text(
-                                        "${data["jamMulai"]?.toString() ?? "-"} - ${data["jamSelesai"]?.toString() ?? "-"}")),
-                                    DataCell(Text(
-                                        "${data["durasi"]?.toString() ?? "0"} Jam")),
-                                    DataCell(Text(
-                                      "Rp ${formatRupiah.format(int.tryParse(data["total"]?.toString() ?? "0") ?? 0)}",
+                                    DataCell(Text(data["nama"]?.toString() ?? "-")),
+                                    DataCell(Text(data["lapangan"]?.toString() ?? "-")),
+                                    DataCell(Text(data["tanggal"]?.toString() ?? "-")),
+                                    DataCell(Text("${data["jamMulai"]?.toString() ?? "-"} - ${data["jamSelesai"]?.toString() ?? "-"}")),
+                                    DataCell(Text("${data["durasi"]?.toString() ?? "0"} Jam")),
+                                    DataCell(Text("Rp ${formatRupiah.format(int.tryParse(data["total"]?.toString() ?? "0") ?? 0)}",
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold),
                                     )),
                                     DataCell(Text(
-                                        data["metode_pembayaran"]?.toString() ??
-                                            "-")),
+                                      data["metode_pembayaran"]?.toString() ?? 
+                                      "-")),
                                     DataCell(
                                       Center(
                                         child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Checkbox(
                                               value: isLunas,
@@ -773,44 +756,38 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                                                           if (id == null) {
                                                             ScaffoldMessenger
                                                                     .of(context)
-                                                                .showSnackBar(
+                                                                    .showSnackBar(
                                                               const SnackBar(
-                                                                  content: Text(
-                                                                      "ID pesanan tidak ditemukan")),
+                                                                  content: Text("ID pesanan tidak ditemukan")),
                                                             );
                                                             return;
                                                           }
-
-                                                          await supabase
+                                                           await supabase
                                                               .from("pesanan")
                                                               .update({
                                                             "status_pembayaran":
                                                                 "Lunas",
-                                                            "paid_at": DateTime
+                                                                 "paid_at": DateTime
                                                                     .now()
                                                                 .toIso8601String(),
                                                           }).eq("id", id);
 
                                                           if (!mounted) return;
-
                                                           setState(
                                                               () {}); // refresh tabel
                                                           ScaffoldMessenger.of(
                                                                   context)
                                                               .showSnackBar(
                                                             const SnackBar(
-                                                                content: Text(
-                                                                    "Pembayaran berhasil ditandai Lunas")),
+                                                                content: Text("Pembayaran berhasil ditandai Lunas")),
                                                           );
                                                         } catch (e) {
-                                                          debugPrint(
-                                                              "Error update pembayaran: $e");
+                                                          debugPrint("Error update pembayaran: $e");
                                                           ScaffoldMessenger.of(
                                                                   context)
                                                               .showSnackBar(
                                                             SnackBar(
-                                                                content: Text(
-                                                                    "Gagal memperbarui status: $e")),
+                                                                content: Text("Gagal memperbarui status: $e")),
                                                           );
                                                         }
                                                       }
