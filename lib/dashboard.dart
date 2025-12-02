@@ -34,58 +34,139 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < 850;
+
     return Scaffold(
-      body: Row(
+      appBar: isMobile
+          ? AppBar(
+              title: Text(_getJudulHalaman(menuAktif)),
+              backgroundColor: const Color(0xFF4CAF7C),
+            )
+          : null,
+
+      drawer: isMobile ? _buildDrawer() : null,
+
+      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+    );
+  }
+
+  // ============================================================================
+  // ======================  DESAIN DESKTOP — 2 KOLOM  ==========================
+  // ============================================================================
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        _buildSidebar(),
+        Expanded(
+          child: Column(
+            children: [
+              Container(
+                height: 60,
+                color: Colors.green.shade100,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  _getJudulHalaman(menuAktif),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: _getKontenHalaman(menuAktif),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================================
+  // =======================  DESAIN MOBILE — 1 KOLOM  ==========================
+  // ============================================================================
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: _getKontenHalaman(menuAktif),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================================
+  // ========================== SIDEBAR DESKTOP ================================
+  // ============================================================================
+  Widget _buildSidebar() {
+    return Container(
+      width: 220,
+      color: const Color(0xFF4CAF7C),
+      child: Column(
         children: [
-          Container(
-            width: 220,
-            color: const Color(0xFF4CAF7C),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                _sidebarItem(Icons.home, "Dashboard", DashboardMenu.dashboard),
-                _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
-                    DashboardMenu.kelolaLapangan),
-                _sidebarItem(Icons.assignment, "Kelola Pesanan",
-                    DashboardMenu.kelolaPesanan),
-                _sidebarItem(
-                    Icons.print, "Cetak Laporan", DashboardMenu.cetakLaporan),
-                const Spacer(),
-                _sidebarItem(Icons.logout, "Logout", null, isLogout: true),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Container(
-                  height: 60,
-                  color: Colors.green.shade100,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    _getJudulHalaman(menuAktif),
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: _getKontenHalaman(menuAktif),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 40),
+          _sidebarItem(Icons.home, "Dashboard", DashboardMenu.dashboard),
+          _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
+              DashboardMenu.kelolaLapangan),
+          _sidebarItem(Icons.assignment, "Kelola Pesanan",
+              DashboardMenu.kelolaPesanan),
+          _sidebarItem(Icons.print, "Cetak Laporan",
+              DashboardMenu.cetakLaporan),
+          const Spacer(),
+          _sidebarItem(Icons.logout, "Logout", null, isLogout: true),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _sidebarItem(IconData icon, String text, DashboardMenu? menu,
-      {bool isLogout = false}) {
+  // ============================================================================
+  // ============================ DRAWER MOBILE ================================
+  // ============================================================================
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Container(
+        color: const Color(0xFF4CAF7C),
+        child: Column(
+          children: [
+            const SizedBox(height: 50),
+            _sidebarItem(Icons.home, "Dashboard", DashboardMenu.dashboard,
+                isDrawer: true),
+            _sidebarItem(Icons.sports_tennis, "Kelola Lapangan",
+                DashboardMenu.kelolaLapangan,
+                isDrawer: true),
+            _sidebarItem(Icons.assignment, "Kelola Pesanan",
+                DashboardMenu.kelolaPesanan,
+                isDrawer: true),
+            _sidebarItem(Icons.print, "Cetak Laporan",
+                DashboardMenu.cetakLaporan,
+                isDrawer: true),
+            const Spacer(),
+            _sidebarItem(Icons.logout, "Logout", null,
+                isLogout: true, isDrawer: true),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // ======================== ITEM MENU (SIDEBAR + DRAWER) ======================
+  // ============================================================================
+  Widget _sidebarItem(
+    IconData icon,
+    String text,
+    DashboardMenu? menu, {
+    bool isLogout = false,
+    bool isDrawer = false,
+  }) {
     final bool isActive = menuAktif == menu;
 
     return InkWell(
@@ -97,8 +178,9 @@ class _DashboardPageState extends State<DashboardPage> {
             menuAktif = menu;
           });
         }
+
+        if (isDrawer) Navigator.pop(context);
       },
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -116,7 +198,6 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Text(
                 text,
                 style: const TextStyle(color: Colors.white),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -125,6 +206,9 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // ============================================================================
+  // ============================== JUDUL HALAMAN ===============================
+  // ============================================================================
   String _getJudulHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -138,6 +222,9 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  // ============================================================================
+  // ======================== KONTEN HALAMAN (TIDAK DIUBAH) =====================
+  // ============================================================================
   Widget _getKontenHalaman(DashboardMenu menu) {
     switch (menu) {
       case DashboardMenu.dashboard:
@@ -149,10 +236,8 @@ class _DashboardPageState extends State<DashboardPage> {
             }
             if (snapshot.hasError) {
               return Center(
-                  child: Text(
-                "Terjadi kesalahan: ${snapshot.error}",
-                textAlign: TextAlign.center,
-              ));
+                child: Text("Terjadi kesalahan: ${snapshot.error}"),
+              );
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text("Belum ada data lapangan"));
@@ -162,7 +247,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth < 800 ? 2 : 3;
+                final crossAxisCount = constraints.maxWidth < 600
+                    ? 1
+                    : constraints.maxWidth < 900
+                        ? 2
+                        : 3;
+
                 return GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
@@ -172,8 +262,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   itemCount: dataLapangan.length,
                   itemBuilder: (context, index) {
-                    final lapangan = dataLapangan[index];
-                    return _lapanganCard(lapangan);
+                    return _lapanganCard(dataLapangan[index]);
                   },
                 );
               },
@@ -195,6 +284,9 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  // ============================================================================
+  // =============================== CARD LAPANGAN ==============================
+  // ============================================================================
   Widget _lapanganCard(Map<String, dynamic> item) {
     final bool available =
         (item["status"]?.toString().toLowerCase() ?? "") == "tersedia";
@@ -272,25 +364,13 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  void _refreshLapangan() {
-    setState(() {
-      menuAktif = DashboardMenu.dashboard;
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> _getLapangan() async {
-    final response = await supabase
-        .from("lapangan")
-        .select()
-        .order("nomor", ascending: true);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
+  // ============================================================================
+  // ============================== LOGOUT DIALOG ===============================
+  // ============================================================================
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -304,32 +384,38 @@ class _DashboardPageState extends State<DashboardPage> {
           content: const Text("Apakah Anda yakin ingin logout?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                "Batal",
-                style: TextStyle(color: Colors.black),
-              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
                 await Supabase.instance.client.auth.signOut();
                 if (context.mounted) {
-                  Navigator.of(context).pop();
+                  Navigator.pop(context);
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const LoginPage()),
                   );
                 }
               },
-              child: const Text(
-                "Logout",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text("Logout", style: TextStyle(color: Colors.white)),
             ),
           ],
         );
       },
     );
+  }
+
+  void _refreshLapangan() {
+    setState(() {
+      menuAktif = DashboardMenu.dashboard;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _getLapangan() async {
+    final response =
+        await supabase.from("lapangan").select().order("nomor", ascending: true);
+    return List<Map<String, dynamic>>.from(response);
   }
 }
