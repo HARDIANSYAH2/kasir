@@ -33,9 +33,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> handleLogin() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       final response = await Supabase.instance.client.auth.signInWithPassword(
@@ -62,11 +60,7 @@ class _LoginPageState extends State<LoginPage> {
 
       _showErrorDialog("Login Gagal", errorMessage);
     } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -92,61 +86,60 @@ class _LoginPageState extends State<LoginPage> {
     final bool isMobile = width < 850;
 
     return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout()
-          : _buildDesktopLayout(),
+      body: Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (isMobile) return _buildMobileLayout(constraints.maxWidth);
+            return _buildDesktopLayout(constraints.maxWidth);
+          },
+        ),
+      ),
     );
   }
 
   // ==========================
-  // 🚀 DESAIN MOBILE (1 kolom)
+  // 🚀 MOBILE (1 kolom)
   // ==========================
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(double maxWidth) {
     return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            child: Column(
-              children: [
-                Image.asset(
-                  "assets/images/logo.jpg",
-                  width: 200,
-                  height: 200,
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
+          Image.asset(
+            "assets/images/logo.jpg",
+            width: maxWidth * 0.5,
+            height: maxWidth * 0.5,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
           ),
-          _buildLoginForm(),
+          const SizedBox(height: 30),
+          _buildLoginForm(maxWidth: maxWidth < 400 ? maxWidth : 360),
         ],
       ),
     );
   }
 
-  // =============================
-  // 🖥 DESAIN DESKTOP (2 kolom)
-  // =============================
-  Widget _buildDesktopLayout() {
+  // ==========================
+  // 🖥 DESKTOP (2 kolom)
+  // ==========================
+  Widget _buildDesktopLayout(double maxWidth) {
     return Row(
       children: [
         Expanded(
-          flex: 1,
           child: Container(
             color: Colors.white,
             child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
                     "assets/images/logo.jpg",
@@ -169,20 +162,16 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         Expanded(
-          flex: 1,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFF4DC88B),
-                  Color(0xFF38B671),
-                ],
+                colors: [Color(0xFF4DC88B), Color(0xFF38B671)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
             child: Center(
-              child: _buildLoginForm(),
+              child: _buildLoginForm(maxWidth: 360),
             ),
           ),
         ),
@@ -190,17 +179,17 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // ===================================================
-  // 📌 WIDGET FORM LOGIN (dipakai mobile + desktop)
-  // ===================================================
-  Widget _buildLoginForm() {
+  // ==========================
+  // FORM LOGIN (dipakai mobile + desktop)
+  // ==========================
+  Widget _buildLoginForm({required double maxWidth}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
           padding: const EdgeInsets.all(30),
-          width: 360,
+          width: maxWidth,
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.25),
             borderRadius: BorderRadius.circular(20),
@@ -218,45 +207,30 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 25),
-              TextField(
+              _buildTextField(
                 controller: emailController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.8),
-                  hintText: "Email",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+                hintText: "Email",
+                prefixIcon: Icons.email_outlined,
               ),
               const SizedBox(height: 15),
-              TextField(
+              _buildTextField(
                 controller: passwordController,
+                hintText: "Password",
+                prefixIcon: Icons.lock_outline,
                 obscureText: !isPasswordVisible,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () =>
-                        setState(() => isPasswordVisible = !isPasswordVisible),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                   ),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.8),
-                  hintText: "Password",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  onPressed: () =>
+                      setState(() => isPasswordVisible = !isPasswordVisible),
                 ),
               ),
               const SizedBox(height: 25),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed:
-                      isButtonActive && !isLoading ? handleLogin : null,
+                  onPressed: isButtonActive && !isLoading ? handleLogin : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isButtonActive
                         ? const Color(0xFF4DC88B)
@@ -287,6 +261,29 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData prefixIcon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        prefixIcon: Icon(prefixIcon),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.8),
+        hintText: hintText,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
       ),
     );

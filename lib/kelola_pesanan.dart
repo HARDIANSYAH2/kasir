@@ -394,407 +394,430 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       );
     }
   }
-  @override
-  Widget build(BuildContext context) {
-    final formatRupiah = NumberFormat("#,##0", "id_ID");
-    InputBorder roundedBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20),
-    );
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 700;
-    return Container(
-      color: bgColor,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // FORM CARD
-            Card(
-              color: cardColor,
-              elevation: 6,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 24),
-                child: Column(
-                  children: [
-                    Text(
-                      "Tambah Data Pesanan",
-                      style: TextStyle(
-                          fontSize: isMobile ? 18 : 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                    ),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: Text(
-                        "Status: $_statusLapangan",
+@override
+Widget build(BuildContext context) {
+  final formatRupiah = NumberFormat("#,##0", "id_ID");
+
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final isMobile = width < 700;
+      final isTablet = width >= 700 && width < 1200;
+      final isDesktop = width >= 1200;
+
+      final padding = isMobile
+          ? 12.0
+          : isTablet
+              ? 20.0
+              : 32.0;
+
+      final fontSizeTitle = isMobile ? 18.0 : 20.0;
+      final fontSizeText = isMobile ? 12.0 : 14.0;
+      final fieldPadding = isMobile ? 16.0 : 24.0;
+      final btnPadding = isMobile ? 12.0 : 16.0;
+
+      InputBorder roundedBorder = OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+      );
+
+      return Container(
+        color: bgColor,
+        padding: EdgeInsets.symmetric(horizontal: padding, vertical: 16),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // FORM CARD
+              Card(
+                color: cardColor,
+                elevation: 6,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: EdgeInsets.all(fieldPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Tambah Data Pesanan",
                         style: TextStyle(
-                          fontSize: isMobile ? 14 : 16,
-                          fontWeight: FontWeight.bold,
-                          color: (_statusLapangan == "Tidak Tersedia")
-                              ? Colors.red
-                              : primaryGreen,
+                            fontSize: fontSizeTitle,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                      const SizedBox(height: 10),
+                      Center(
+                        child: Text(
+                          "Status: $_statusLapangan",
+                          style: TextStyle(
+                            fontSize: fontSizeText + 2,
+                            fontWeight: FontWeight.bold,
+                            color: (_statusLapangan == "Tidak Tersedia")
+                                ? Colors.red
+                                : primaryGreen,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: namaController,
-                      decoration: InputDecoration(
-                        labelText: "Nama Penyewa",
-                        prefixIcon: const Icon(Icons.person_outline),
-                        border: roundedBorder,
-                        isDense: isMobile,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    InkWell(
-                      onTap: () async {
-                        final pilihTanggal = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime(2100),
-                        );
-                        if (pilihTanggal != null) {
-                          setState(() {
-                            tanggalMain = pilihTanggal;
-                            jamMulaiDipilih = null;
-                          });
-                          await ambilJamYangSudahDipesan(pilihTanggal);
-                        }
-                      },
-                      child: InputDecorator(
+                      const SizedBox(height: 14),
+                      // NAMA
+                      TextField(
+                        controller: namaController,
                         decoration: InputDecoration(
-                          labelText: "Tanggal Main",
-                          prefixIcon: const Icon(Icons.calendar_today_outlined),
+                          labelText: "Nama Penyewa",
+                          prefixIcon: const Icon(Icons.person_outline),
                           border: roundedBorder,
                           isDense: isMobile,
                         ),
-                        child: Text(
-                          tanggalMain != null
-                              ? "${tanggalMain!.day}-${tanggalMain!.month}-${tanggalMain!.year}"
-                              : "Pilih Tanggal",
-                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<Map<String, dynamic>>(
-                      value: lapanganDipilihLocal,
-                      items: daftarLapangan.map((lap) {
-                        return DropdownMenuItem<Map<String, dynamic>>(
-                          value: lap,
-                          child: Text("${lap["nama"]} ${lap["nomor"] ?? ""}"),
-                        );
-                      }).toList(),
-                      onChanged: (val) async {
-                        setState(() => lapanganDipilihLocal = val);
-                        await ambilJamYangSudahDipesan(tanggalMain ?? DateTime.now());
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Pilih Lapangan",
-                        prefixIcon: const Icon(Icons.sports_tennis_outlined),
-                        border: roundedBorder,
-                        isDense: isMobile,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("Jam Mulai", style: TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: jamPilihan.map((jam) {
-                        bool isSelected = jamMulaiDipilih == jam;
-                        bool isDisabled = jamSudahDipesan.contains(jam);
-                        bool isTutup = jam == "21:00";
-
-                        return ChoiceChip(
-                          label: Text(isTutup ? "$jam (Tutup)" : jam),
-                          selected: isSelected,
-                          onSelected: (isDisabled || isTutup) ? null : (_) => setState(() => jamMulaiDipilih = jam),
-                          showCheckmark: false,
-                          selectedColor: primaryGreen,
-                          disabledColor: isTutup ? Colors.red.shade100 : Colors.grey[300],
-                          backgroundColor: Colors.white,
-                          elevation: isSelected ? 3 : 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : isTutup ? Colors.redAccent : isDisabled ? Colors.grey : Colors.black,
-                            fontWeight: isTutup ? FontWeight.bold : FontWeight.normal,
-                            fontSize: isMobile ? 12 : 14,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<int>(
-                      value: durasiController.text.isNotEmpty ? int.tryParse(durasiController.text) : null,
-                      items: [1, 2, 3, 4].map((d) => DropdownMenuItem(value: d, child: Text("$d Jam"))).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            durasiController.text = val.toString();
-                          });
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Durasi",
-                        prefixIcon: const Icon(Icons.timer_outlined),
-                        border: roundedBorder,
-                        isDense: isMobile,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Builder(
-                      builder: (context) {
-                        int hargaPerJam = int.tryParse((lapanganDipilihLocal?["harga_perjam"] ?? lapanganDipilihLocal?["harga"])?.toString() ?? "0") ?? 0;
-                        int durasi = int.tryParse(durasiController.text.isEmpty ? "0" : durasiController.text) ?? 0;
-                        int total = hargaPerJam * durasi;
-
-                        return InputDecorator(
+                      const SizedBox(height: 12),
+                      // TANGGAL
+                      InkWell(
+                        onTap: () async {
+                          final pilihTanggal = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2100),
+                          );
+                          if (pilihTanggal != null) {
+                            setState(() {
+                              tanggalMain = pilihTanggal;
+                              jamMulaiDipilih = null;
+                            });
+                            await ambilJamYangSudahDipesan(pilihTanggal);
+                          }
+                        },
+                        child: InputDecorator(
                           decoration: InputDecoration(
-                            labelText: "Total Harga",
-                            prefixIcon: const Icon(Icons.attach_money_outlined),
+                            labelText: "Tanggal Main",
+                            prefixIcon: const Icon(Icons.calendar_today_outlined),
                             border: roundedBorder,
                             isDense: isMobile,
                           ),
                           child: Text(
-                            (hargaPerJam > 0 && durasi > 0) ? "Rp ${formatRupiah.format(total)}" : "Rp 0",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            tanggalMain != null
+                                ? "${tanggalMain!.day}-${tanggalMain!.month}-${tanggalMain!.year}"
+                                : "Pilih Tanggal",
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: metodePembayaran,
-                      items: const [
-                        DropdownMenuItem(value: "Cash", child: Text("Cash")),
-                        DropdownMenuItem(value: "QRIS", child: Text("QRIS / Transfer")),
-                      ],
-                      onChanged: (val) {
-                        setState(() {
-                          metodePembayaran = val;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Metode Pembayaran",
-                        prefixIcon: const Icon(Icons.payment_outlined),
-                        border: roundedBorder,
-                        isDense: isMobile,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: tambahPesanan,
-                          icon: const Icon(Icons.save, color: Colors.white),
-                          label: const Text("Simpan", style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryGreen,
-                            padding: EdgeInsets.symmetric(horizontal: isMobile ? 18 : 28, vertical: isMobile ? 12 : 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            elevation: 3,
-                          ),
+                      const SizedBox(height: 12),
+                      // LAPANGAN
+                      DropdownButtonFormField<Map<String, dynamic>>(
+                        value: lapanganDipilihLocal,
+                        items: daftarLapangan.map((lap) {
+                          return DropdownMenuItem<Map<String, dynamic>>(
+                            value: lap,
+                            child: Text("${lap["nama"]} ${lap["nomor"] ?? ""}"),
+                          );
+                        }).toList(),
+                        onChanged: (val) async {
+                          setState(() => lapanganDipilihLocal = val);
+                          await ambilJamYangSudahDipesan(tanggalMain ?? DateTime.now());
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Pilih Lapangan",
+                          prefixIcon: const Icon(Icons.sports_tennis_outlined),
+                          border: roundedBorder,
+                          isDense: isMobile,
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: resetForm,
-                          icon: const Icon(Icons.cancel, color: Colors.white),
-                          label: const Text("Batal", style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            padding: EdgeInsets.symmetric(horizontal: isMobile ? 18 : 28, vertical: isMobile ? 12 : 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            elevation: 3,
-                          ),
+                      ),
+                      const SizedBox(height: 14),
+                      // JAM MULAI
+                      Text("Jam Mulai", style: TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: jamPilihan.map((jam) {
+                          bool isSelected = jamMulaiDipilih == jam;
+                          bool isDisabled = jamSudahDipesan.contains(jam);
+                          bool isTutup = jam == "21:00";
+
+                          return ChoiceChip(
+                            label: Text(isTutup ? "$jam (Tutup)" : jam),
+                            selected: isSelected,
+                            onSelected: (isDisabled || isTutup) ? null : (_) => setState(() => jamMulaiDipilih = jam),
+                            showCheckmark: false,
+                            selectedColor: primaryGreen,
+                            disabledColor: isTutup ? Colors.red.shade100 : Colors.grey[300],
+                            backgroundColor: Colors.white,
+                            elevation: isSelected ? 3 : 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : isTutup ? Colors.redAccent : isDisabled ? Colors.grey : Colors.black,
+                              fontWeight: isTutup ? FontWeight.bold : FontWeight.normal,
+                              fontSize: fontSizeText,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      // DURASI
+                      DropdownButtonFormField<int>(
+                        value: durasiController.text.isNotEmpty ? int.tryParse(durasiController.text) : null,
+                        items: [1, 2, 3, 4].map((d) => DropdownMenuItem(value: d, child: Text("$d Jam"))).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              durasiController.text = val.toString();
+                            });
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Durasi",
+                          prefixIcon: const Icon(Icons.timer_outlined),
+                          border: roundedBorder,
+                          isDense: isMobile,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 12),
+                      // TOTAL HARGA
+                      Builder(
+                        builder: (context) {
+                          int hargaPerJam = int.tryParse((lapanganDipilihLocal?["harga_perjam"] ?? lapanganDipilihLocal?["harga"])?.toString() ?? "0") ?? 0;
+                          int durasi = int.tryParse(durasiController.text.isEmpty ? "0" : durasiController.text) ?? 0;
+                          int total = hargaPerJam * durasi;
+
+                          return InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: "Total Harga",
+                              prefixIcon: const Icon(Icons.attach_money_outlined),
+                              border: roundedBorder,
+                              isDense: isMobile,
+                            ),
+                            child: Text(
+                              (hargaPerJam > 0 && durasi > 0) ? "Rp ${formatRupiah.format(total)}" : "Rp 0",
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSizeText),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      // METODE PEMBAYARAN
+                      DropdownButtonFormField<String>(
+                        value: metodePembayaran,
+                        items: const [
+                          DropdownMenuItem(value: "Cash", child: Text("Cash")),
+                          DropdownMenuItem(value: "QRIS", child: Text("QRIS / Transfer")),
+                        ],
+                        onChanged: (val) {
+                          setState(() {
+                            metodePembayaran = val;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Metode Pembayaran",
+                          prefixIcon: const Icon(Icons.payment_outlined),
+                          border: roundedBorder,
+                          isDense: isMobile,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // TOMBOL SIMPAN/BATAL
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: tambahPesanan,
+                            icon: const Icon(Icons.save, color: Colors.white),
+                            label: const Text("Simpan", style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryGreen,
+                              padding: EdgeInsets.symmetric(horizontal: 28, vertical: btnPadding),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              elevation: 3,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            onPressed: resetForm,
+                            icon: const Icon(Icons.cancel, color: Colors.white),
+                            label: const Text("Batal", style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              padding: EdgeInsets.symmetric(horizontal: 28, vertical: btnPadding),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              elevation: 3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
-            Text("Daftar Pesanan",
-                style: TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold, color: Colors.black)),
-            const SizedBox(height: 10),
-            Card(
-              color: cardColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              elevation: 6,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                    future: fetchPesanan(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-
-                      if (snapshot.hasError) {
-                        return Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Text("Terjadi kesalahan: ${snapshot.error}"),
-                        );
-                      }
-
-                      final pesananDocs = snapshot.data ?? [];
-                      if (pesananDocs.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Center(child: Text("Belum ada pesanan")),
-                        );
-                      }
-
-                      // --- MOBILE: card list ---
-                      if (isMobile) {
-                        return ListView.separated(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.all(12),
-                          itemCount: pesananDocs.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 10),
-                          itemBuilder: (context, i) {
-                            final data = pesananDocs[i];
-                            final isLunas = (data["status_pembayaran"]?.toString() == "Lunas");
-                            return Card(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(child: Text(data["nama"]?.toString() ?? "-", style: const TextStyle(fontWeight: FontWeight.bold))),
-                                        Text(data["lapangan"]?.toString() ?? "-"),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.calendar_today_outlined, size: 14),
-                                        const SizedBox(width: 6),
-                                        Text(data["tanggal"]?.toString() ?? "-"),
-                                        const SizedBox(width: 12),
-                                        const Icon(Icons.access_time, size: 14),
-                                        const SizedBox(width: 6),
-                                        Text("${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}"),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text("Rp ${formatRupiah.format(int.tryParse(data["total"]?.toString() ?? "0") ?? 0)}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        Row(
-                                          children: [
-                                            Checkbox(
-                                              value: isLunas,
-                                              onChanged: isLunas
-                                                  ? null
-                                                  : (val) async {
-                                                      if (val == true) {
-                                                        final id = data["id"]?.toString();
-                                                        if (id != null) await tandaiLunas(id, data);
-                                                      }
-                                                    },
-                                              activeColor: primaryGreen,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            IconButton(
-                                              icon: const Icon(Icons.picture_as_pdf, color: Colors.blue),
-                                              onPressed: () => cetakStrukPDF(data),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      }
-
-                      // --- WIDE: DataTable ---
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: DataTable(
-                            columnSpacing: 28,
-                            headingRowColor: MaterialStatePropertyAll(primaryGreen.withOpacity(0.25)),
-                            headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                            dataRowMinHeight: 58,
-                            dataRowMaxHeight: 64,
-                            border: TableBorder.all(color: Colors.black54, width: 1, borderRadius: BorderRadius.circular(8)),
-                            columns: const [
-                              DataColumn(label: Text("Nama")),
-                              DataColumn(label: Text("Lapangan")),
-                              DataColumn(label: Text("Tanggal")),
-                              DataColumn(label: Text("Jam")),
-                              DataColumn(label: Text("Durasi")),
-                              DataColumn(label: Text("Total")),
-                              DataColumn(label: Text("Metode")),
-                              DataColumn(label: Text("Aksi")),
-                            ],
-                            rows: pesananDocs.map((data) {
-                              final isLunas = (data["status_pembayaran"]?.toString() == "Lunas");
-                              return DataRow(cells: [
-                                DataCell(Text(data["nama"]?.toString() ?? "-")),
-                                DataCell(Text(data["lapangan"]?.toString() ?? "-")),
-                                DataCell(Text(data["tanggal"]?.toString() ?? "-")),
-                                DataCell(Text("${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}")),
-                                DataCell(Text("${data["durasi"] ?? "0"} Jam")),
-                                DataCell(Text("Rp ${formatRupiah.format(int.tryParse(data["total"]?.toString() ?? "0") ?? 0)}", style: const TextStyle(fontWeight: FontWeight.bold))),
-                                DataCell(Text(data["metode_pembayaran"]?.toString() ?? "-")),
-                                DataCell(Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Checkbox(
-                                      value: isLunas,
-                                      onChanged: isLunas
-                                          ? null
-                                          : (val) async {
-                                              if (val == true) {
-                                                final id = data["id"]?.toString();
-                                                if (id != null) await tandaiLunas(id, data);
-                                              }
-                                            },
-                                      activeColor: primaryGreen,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      icon: const Icon(Icons.picture_as_pdf, color: Colors.blue),
-                                      onPressed: () => cetakStrukPDF(data),
-                                    ),
-                                  ],
-                                )),
-                              ]);
-                            }).toList(),
-                          ),
-                        ),
-                      );
-                    }),
+              const SizedBox(height: 18),
+              // DAFTAR PESANAN
+              Text(
+                "Daftar Pesanan",
+                style: TextStyle(fontSize: fontSizeTitle, fontWeight: FontWeight.bold, color: Colors.black),
               ),
-            ),
-            const SizedBox(height: 30),
-          ],
+              const SizedBox(height: 10),
+              Card(
+                color: cardColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 6,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: fetchPesanan(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final pesananDocs = snapshot.data ?? [];
+                        if (pesananDocs.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(child: Text("Belum ada pesanan")),
+                          );
+                        }
+
+                        // MOBILE LIST
+                        if (isMobile) {
+                          return ListView.separated(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.all(12),
+                            itemCount: pesananDocs.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            itemBuilder: (context, i) {
+                              final data = pesananDocs[i];
+                              final isLunas = (data["status_pembayaran"]?.toString() == "Lunas");
+                              return Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(child: Text(data["nama"]?.toString() ?? "-", style: const TextStyle(fontWeight: FontWeight.bold))),
+                                          Text(data["lapangan"]?.toString() ?? "-"),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.calendar_today_outlined, size: 14),
+                                          const SizedBox(width: 6),
+                                          Text(data["tanggal"]?.toString() ?? "-"),
+                                          const SizedBox(width: 12),
+                                          const Icon(Icons.access_time, size: 14),
+                                          const SizedBox(width: 6),
+                                          Text("${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}"),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "Rp ${formatRupiah.format(int.tryParse(data["total"]?.toString() ?? "0") ?? 0)}",
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Checkbox(
+                                                value: isLunas,
+                                                onChanged: isLunas
+                                                    ? null
+                                                    : (val) async {
+                                                        if (val == true) {
+                                                          final id = data["id"]?.toString();
+                                                          if (id != null) await tandaiLunas(id, data);
+                                                        }
+                                                      },
+                                                activeColor: primaryGreen,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              IconButton(
+                                                icon: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                                                onPressed: () => cetakStrukPDF(data),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        }
+                        
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: DataTable(
+                              columnSpacing: 28,
+                              headingRowColor: MaterialStatePropertyAll(primaryGreen.withOpacity(0.25)),
+                              headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                              dataRowMinHeight: 58,
+                              dataRowMaxHeight: 64,
+                              border: TableBorder.all(color: Colors.black54, width: 1, borderRadius: BorderRadius.circular(8)),
+                              columns: const [
+                                DataColumn(label: Text("Nama")),
+                                DataColumn(label: Text("Lapangan")),
+                                DataColumn(label: Text("Tanggal")),
+                                DataColumn(label: Text("Jam")),
+                                DataColumn(label: Text("Durasi")),
+                                DataColumn(label: Text("Total")),
+                                DataColumn(label: Text("Metode")),
+                                DataColumn(label: Text("Aksi")),
+                              ],
+                              rows: pesananDocs.map((data) {
+                                final isLunas = (data["status_pembayaran"]?.toString() == "Lunas");
+                                return DataRow(cells: [
+                                  DataCell(Text(data["nama"]?.toString() ?? "-")),
+                                  DataCell(Text(data["lapangan"]?.toString() ?? "-")),
+                                  DataCell(Text(data["tanggal"]?.toString() ?? "-")),
+                                  DataCell(Text("${data["jamMulai"] ?? "-"} - ${data["jamSelesai"] ?? "-"}")),
+                                  DataCell(Text("${data["durasi"] ?? "0"} Jam")),
+                                  DataCell(Text("Rp ${formatRupiah.format(int.tryParse(data["total"]?.toString() ?? "0") ?? 0)}", style: const TextStyle(fontWeight: FontWeight.bold))),
+                                  DataCell(Text(data["metode_pembayaran"]?.toString() ?? "-")),
+                                  DataCell(Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Checkbox(
+                                        value: isLunas,
+                                        onChanged: isLunas
+                                            ? null
+                                            : (val) async {
+                                                if (val == true) {
+                                                  final id = data["id"]?.toString();
+                                                  if (id != null) await tandaiLunas(id, data);
+                                                }
+                                              },
+                                        activeColor: primaryGreen,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        icon: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                                        onPressed: () => cetakStrukPDF(data),
+                                      ),
+                                    ],
+                                  )),
+                                ]);
+                              }).toList(),
+                            ),
+                          ),
+                        );
+                      }),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 }

@@ -221,7 +221,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     });
   }
 
-  // BUILD UI
   @override
   Widget build(BuildContext context) {
     final mobile = isMobile(context);
@@ -288,7 +287,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // UPLOAD IMAGE WIDGET
+  // UPLOAD IMAGE
   Widget _uploadImageWidget(bool mobile) {
     return Column(
       children: [
@@ -303,12 +302,16 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
             child: _pickedBytes != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.memory(_pickedBytes!, fit: BoxFit.cover, width: double.infinity, height: 130),
+                    child: Image.memory(_pickedBytes!,
+                        fit: BoxFit.cover, width: double.infinity, height: 130),
                   )
                 : (_imageUrl != null && _imageUrl!.isNotEmpty)
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.network(_imageUrl!, fit: BoxFit.cover, width: double.infinity, height: 130),
+                        child: Image.network(_imageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 130),
                       )
                     : const Text("Belum ada gambar"),
           ),
@@ -333,7 +336,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // BUTTONS
+  // ACTION BUTTONS
   Widget _actionButtons(bool mobile) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -343,7 +346,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
           icon: const Icon(Icons.save, color: Colors.white),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green.shade700,
-            padding: EdgeInsets.symmetric(horizontal: mobile ? 16 : 24, vertical: mobile ? 10 : 12),
+            padding: EdgeInsets.symmetric(
+                horizontal: mobile ? 16 : 24, vertical: mobile ? 10 : 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
           label: Text(_editingId == null ? "Simpan" : "Ubah"),
@@ -354,7 +358,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
           icon: const Icon(Icons.cancel, color: Colors.white),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.redAccent,
-            padding: EdgeInsets.symmetric(horizontal: mobile ? 14 : 20, vertical: mobile ? 10 : 12),
+            padding: EdgeInsets.symmetric(
+                horizontal: mobile ? 14 : 20, vertical: mobile ? 10 : 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
           label: const Text("Batal"),
@@ -363,16 +368,13 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // DESKTOP TABLE
+  // DATA TABLE
   Widget _dataTableWidget() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: supabase.from("lapangan").select().order("created_at", ascending: true),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final data = snapshot.data!;
-
         return ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: SingleChildScrollView(
@@ -404,7 +406,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                                 width: 50,
                                 height: 50,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.broken_image),
                               ),
                             )
                           : const Icon(Icons.image_not_supported),
@@ -420,7 +423,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _konfirmasiHapus(item["id"].toString()),
+                          onPressed: () =>
+                              _konfirmasiHapus(item["id"].toString()),
                         ),
                       ],
                     )),
@@ -434,14 +438,12 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // MOBILE LIST
+  // LIST MOBILE
   Widget _listViewMobile() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: supabase.from("lapangan").select().order("created_at", ascending: true),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final data = snapshot.data!;
         if (data.isEmpty) {
           return Container(
@@ -495,7 +497,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                       ),
                     const SizedBox(height: 12),
                     Text("Lapangan Nomor: ${item["nomor"] ?? "-"}",
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                     Text("Harga/Jam: ${rupiahFormat.format(harga ?? 0)}"),
                     Text("Status: ${item["status"] ?? "Tersedia"}"),
                     const SizedBox(height: 10),
@@ -508,7 +511,8 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _konfirmasiHapus(item["id"].toString()),
+                          onPressed: () =>
+                              _konfirmasiHapus(item["id"].toString()),
                         ),
                       ],
                     )
@@ -522,7 +526,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // FIELD
+  // FIELD TEXT
   Widget _textFieldInside(String label, TextEditingController controller,
       {TextInputType inputType = TextInputType.text}) {
     return TextField(
