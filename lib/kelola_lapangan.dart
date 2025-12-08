@@ -40,7 +40,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
   bool isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < 650;
 
+  // ==========================================
   // PICK IMAGE
+  // ==========================================
   Future<void> _pickImage() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -85,7 +87,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
+  // ==========================================
   // SIMPAN LAPANGAN
+  // ==========================================
   Future<void> _simpanLapangan() async {
     final nomor = nomorController.text.trim();
     final harga = int.tryParse(hargaController.text.trim()) ?? 0;
@@ -159,7 +163,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     }
   }
 
+  // ==========================================
   // KONFIRMASI HAPUS
+  // ==========================================
   Future<void> _konfirmasiHapus(String id) async {
     final konfirmasi = await showDialog<bool>(
       context: context,
@@ -221,6 +227,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     });
   }
 
+  // ==========================================
+  // BUILD
+  // ==========================================
   @override
   Widget build(BuildContext context) {
     final mobile = isMobile(context);
@@ -246,7 +255,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
+  // ==========================================
   // FORM
+  // ==========================================
   Widget _formWidget(bool mobile) {
     return Card(
       color: const Color(0xFFDFF4DF),
@@ -267,19 +278,18 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
               ),
             ),
             SizedBox(height: mobile ? 18 : 30),
-            if (!mobile)
-              const Text(
-                "Nama Lapangan: Lapangan Badminton",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            if (!mobile) const SizedBox(height: 20),
             _textFieldInside("Nomor Lapangan", nomorController),
             SizedBox(height: mobile ? 12 : 20),
             _textFieldInside("Harga Perjam", hargaController,
                 inputType: TextInputType.number),
             SizedBox(height: mobile ? 12 : 24),
+
+            // =============================
+            // UPLOAD IMAGE BARU (VERTIKAL)
+            // =============================
             _uploadImageWidget(mobile),
-            SizedBox(height: mobile ? 16 : 32),
+
+            SizedBox(height: mobile ? 18 : 32),
             _actionButtons(mobile),
           ],
         ),
@@ -287,37 +297,44 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // UPLOAD IMAGE
-  Widget _uploadImageWidget(bool mobile) {
-    return Column(
-      children: [
-        Container(
-          height: 130,
-          width: double.infinity,
+  // ==========================================
+  // UPLOAD IMAGE – VERTIKAL, SEDANG, RAPIH
+  // ==========================================
+ Widget _uploadImageWidget(bool mobile) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Center(
+        child: Container(
+          width: mobile ? 180 : 200,
+          height: mobile ? 180 : 200,
           decoration: BoxDecoration(
             color: Colors.green.shade50,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.shade300),
           ),
-          child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
             child: _pickedBytes != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.memory(_pickedBytes!,
-                        fit: BoxFit.cover, width: double.infinity, height: 130),
-                  )
+                ? Image.memory(_pickedBytes!, fit: BoxFit.cover)
                 : (_imageUrl != null && _imageUrl!.isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(_imageUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: 130),
-                      )
-                    : const Text("Belum ada gambar"),
+                    ? Image.network(_imageUrl!, fit: BoxFit.cover)
+                    : Center(
+                        child: Icon(
+                          Icons.image,
+                          size: mobile ? 50 : 70,
+                          color: Colors.green.shade300,
+                        ),
+                      ),
           ),
         ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
+      ),
+
+      const SizedBox(height: 16),
+
+      Center(
+        child: OutlinedButton.icon(
           onPressed: _isUploadingImage ? null : _pickImage,
           icon: _isUploadingImage
               ? const SizedBox(
@@ -325,33 +342,48 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.image),
-          label: Text(_isUploadingImage ? "Mengunggah..." : "Pilih Gambar"),
+              : const Icon(Icons.upload),
+          label: Text(
+            _isUploadingImage ? "Mengunggah..." : "Pilih Gambar",
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
           style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            foregroundColor: Colors.green.shade700,
             side: BorderSide(color: Colors.green.shade600),
-            foregroundColor: Colors.green.shade800,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
-  // ACTION BUTTONS
+
+  // ==========================================
+  // BUTTON
+  // ==========================================
   Widget _actionButtons(bool mobile) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton.icon(
-          onPressed: _isLoading ? null : _simpanLapangan,
-          icon: const Icon(Icons.save, color: Colors.white),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
-            padding: EdgeInsets.symmetric(
-                horizontal: mobile ? 16 : 24, vertical: mobile ? 10 : 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          ),
-          label: Text(_editingId == null ? "Simpan" : "Ubah"),
-        ),
+       ElevatedButton.icon(
+  onPressed: _isLoading ? null : _simpanLapangan,
+  icon: const Icon(Icons.save, color: Colors.white),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.green.shade700,
+    padding: EdgeInsets.symmetric(
+        horizontal: mobile ? 16 : 24, vertical: mobile ? 10 : 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  ),
+  label: Text(
+    _editingId == null ? "Simpan" : "Ubah",
+    style: const TextStyle(color: Colors.white),
+  ),
+),
+
         const SizedBox(width: 12),
         ElevatedButton.icon(
           onPressed: _resetForm,
@@ -362,13 +394,15 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                 horizontal: mobile ? 14 : 20, vertical: mobile ? 10 : 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
-          label: const Text("Batal"),
+          label: const Text("Batal",style: TextStyle(color: Colors.white),),
         ),
       ],
     );
   }
 
-  // DATA TABLE
+  // ==========================================
+  // DATA TABLE DESKTOP
+  // ==========================================
   Widget _dataTableWidget() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: supabase.from("lapangan").select().order("created_at", ascending: true),
@@ -406,8 +440,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                                 width: 50,
                                 height: 50,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    const Icon(Icons.broken_image),
                               ),
                             )
                           : const Icon(Icons.image_not_supported),
@@ -438,7 +470,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
+  // ==========================================
   // LIST MOBILE
+  // ==========================================
   Widget _listViewMobile() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: supabase.from("lapangan").select().order("created_at", ascending: true),
@@ -478,11 +512,6 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                           height: 140,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            height: 140,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.broken_image, size: 48),
-                          ),
                         ),
                       )
                     else
@@ -495,7 +524,7 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
                         ),
                         child: const Icon(Icons.image_not_supported, size: 48),
                       ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text("Lapangan Nomor: ${item["nomor"] ?? "-"}",
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
@@ -526,7 +555,9 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
     );
   }
 
-  // FIELD TEXT
+  // ==========================================
+  // TEXTFIELD
+  // ==========================================
   Widget _textFieldInside(String label, TextEditingController controller,
       {TextInputType inputType = TextInputType.text}) {
     return TextField(
@@ -534,15 +565,12 @@ class _KelolaLapanganContentState extends State<KelolaLapanganContent> {
       keyboardType: inputType,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.black54),
         filled: true,
         fillColor: Colors.green.shade50,
         prefixIcon: Icon(
           label == "Nomor Lapangan"
               ? Icons.onetwothree_rounded
-              : label == "Harga Perjam"
-                  ? Icons.attach_money
-                  : Icons.edit_note,
+              : Icons.attach_money,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),

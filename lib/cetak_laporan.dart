@@ -355,13 +355,31 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       onPressed: () async {
-        final pickedRange = await showDateRangePicker(
-          context: context,
-          firstDate: DateTime(2020),
-          lastDate: DateTime(2100),
-          initialDateRange: filterTanggal ?? DateTimeRange(start: DateTime.now(), end: DateTime.now()),
-          helpText: 'Pilih Periode Tanggal',
-        );
+      final pickedRange = await showDateRangePicker(
+  context: context,
+  firstDate: DateTime(2020),
+  lastDate: DateTime(2100),
+  initialDateRange: filterTanggal ??
+      DateTimeRange(start: DateTime.now(), end: DateTime.now()),
+  helpText: 'Pilih Periode Tanggal',
+
+  builder: (context, child) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 380,  // <–– ukuran popup seperti gambar
+          maxHeight: 500, // <–– tingginya juga diperkecil
+        ),
+        child: Material(
+          borderRadius: BorderRadius.circular(28),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        ),
+      ),
+    );
+  },
+);
+
 
         if (pickedRange != null) {
           setState(() => filterTanggal = pickedRange);

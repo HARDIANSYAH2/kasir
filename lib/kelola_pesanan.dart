@@ -437,13 +437,16 @@ Widget build(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Tambah Data Pesanan",
-                        style: TextStyle(
-                            fontSize: fontSizeTitle,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black),
+                         Center(
+                         child: Text(
+                         "Tambah Data Pesanan",
+                          style: TextStyle(
+                          fontSize: fontSizeTitle,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                       ),
+                    ),
+                   ),
                       const SizedBox(height: 10),
                       Center(
                         child: Text(
