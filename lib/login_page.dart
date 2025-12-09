@@ -27,8 +27,8 @@ class _LoginPageState extends State<LoginPage> {
 
   void _checkInput() {
     setState(() {
-      isButtonActive =
-          emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
+      isButtonActive = emailController.text.isNotEmpty &&
+          passwordController.text.isNotEmpty;
     });
   }
 
@@ -108,21 +108,21 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           Image.asset(
             "assets/images/logo.jpg",
-            width: maxWidth * 0.5,
-            height: maxWidth * 0.5,
+            width: maxWidth * 0.55,
+            height: maxWidth * 0.55,
           ),
           const SizedBox(height: 20),
           const Text(
             "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
           ),
           const SizedBox(height: 30),
-          _buildLoginForm(maxWidth: maxWidth < 400 ? maxWidth : 360),
+          _buildLoginForm(maxWidth: maxWidth.clamp(280, 360)),
         ],
       ),
     );
@@ -135,29 +135,26 @@ class _LoginPageState extends State<LoginPage> {
     return Row(
       children: [
         Expanded(
-          child: Container(
-            color: Colors.white,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    "assets/images/logo.jpg",
-                    width: 280,
-                    height: 280,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  "assets/images/logo.jpg",
+                  width: 280,
+                  height: 280,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Selamat Datang di Aplikasi Kasir\nPenyewaan Lapangan Badminton",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -171,7 +168,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             child: Center(
-              child: _buildLoginForm(maxWidth: 360),
+              child: _buildLoginForm(maxWidth: 380),
             ),
           ),
         ),
@@ -180,20 +177,20 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // ==========================
-  // FORM LOGIN (dipakai mobile + desktop)
+  // FORM LOGIN
   // ==========================
   Widget _buildLoginForm({required double maxWidth}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.all(30),
+          padding: const EdgeInsets.all(25),
           width: maxWidth,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.25),
+            color: Colors.white.withOpacity(0.55),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.2),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -203,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 25),
@@ -220,7 +217,9 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: !isPasswordVisible,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () =>
                       setState(() => isPasswordVisible = !isPasswordVisible),
@@ -232,14 +231,13 @@ class _LoginPageState extends State<LoginPage> {
                 child: ElevatedButton(
                   onPressed: isButtonActive && !isLoading ? handleLogin : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isButtonActive
-                        ? const Color(0xFF4DC88B)
-                        : Colors.grey,
+                    backgroundColor:
+                        isButtonActive ? const Color(0xFF4DC88B) : Colors.grey,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    elevation: 4,
+                    elevation: 3,
                   ),
                   child: isLoading
                       ? const SizedBox(
@@ -280,10 +278,10 @@ class _LoginPageState extends State<LoginPage> {
         prefixIcon: Icon(prefixIcon),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.8),
+        fillColor: Colors.white.withOpacity(0.9),
         hintText: hintText,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
