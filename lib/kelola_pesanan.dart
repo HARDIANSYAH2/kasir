@@ -375,11 +375,10 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
         "paid_at": DateTime.now().toIso8601String(),
       }).eq("id", id);
 
-      // optional: cetak setelah lunas
-      await cetakStrukPDF(rowData);
+      // Tidak lagi mencetak PDF otomatis
 
       if (!mounted) return;
-      setState(() {});
+      setState(() {}); // trigger rebuild
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Pembayaran ditandai Lunas")),
       );
@@ -387,6 +386,27 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
       debugPrint("Error tandaiLunas: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal menandai Lunas")),
+      );
+    }
+  }
+
+  // helper: mark pembayaran belum lunas (kembalikan)
+  Future<void> tandaiBelumLunas(String id) async {
+    try {
+      await supabase.from("pesanan").update({
+        "status_pembayaran": "Belum Lunas",
+        "paid_at": null,
+      }).eq("id", id);
+
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Status dikembalikan: Belum Lunas")),
+      );
+    } catch (e) {
+      debugPrint("Error tandaiBelumLunas: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal mengubah status")),
       );
     }
   }
@@ -789,32 +809,49 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                                                   fontWeight:
                                                       FontWeight.bold),
                                             ),
-                                            Row(
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
                                               children: [
-                                                Checkbox(
-                                                  value: isLunas,
-                                                  onChanged: isLunas
-                                                      ? null
-                                                      : (val) async {
-                                                          if (val == true) {
-                                                            final id = data[
-                                                                    "id"]
-                                                                ?.toString();
-                                                            if (id != null) {
-                                                              await tandaiLunas(
-                                                                  id, data);
-                                                            }
-                                                          }
-                                                        },
-                                                  activeColor: primaryGreen,
+                                                // STATUS TEXT
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      isLunas ? "Lunas" : "Belum Lunas",
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        color: isLunas ? Colors.green : Colors.red,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 6),
-                                                IconButton(
-                                                  icon: const Icon(
-                                                      Icons.picture_as_pdf,
-                                                      color: Colors.blue),
-                                                  onPressed: () =>
-                                                      cetakStrukPDF(data),
+                                                const SizedBox(height: 6),
+                                                Row(
+                                                  children: [
+                                                    // CHECKBOX untuk tandai lunas / kembalikan
+                                                    Checkbox(
+                                                      value: isLunas,
+                                                      onChanged: (val) async {
+                                                        final id = data["id"]?.toString();
+                                                        if (id == null) return;
+                                                        if (val == true) {
+                                                          await tandaiLunas(id, data);
+                                                        } else {
+                                                          await tandaiBelumLunas(id);
+                                                        }
+                                                      },
+                                                      activeColor: primaryGreen,
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    // TOMBOL CETAK PDF SELALU TAMPIL
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                          Icons.picture_as_pdf,
+                                                          color: Colors.blue),
+                                                      onPressed: () =>
+                                                          cetakStrukPDF(data),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
@@ -871,19 +908,33 @@ class _KelolaPesananContentState extends State<KelolaPesananContent> {
                                     DataCell(Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
+                                        // tampilkan teks status
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8.0),
+                                          child: Text(
+                                            isLunas ? "Lunas" : "Belum Lunas",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: isLunas ? Colors.green : Colors.red,
+                                            ),
+                                          ),
+                                        ),
                                         Checkbox(
                                           value: isLunas,
-                                          onChanged: isLunas
-                                              ? null
-                                              : (val) async {
-                                                  if (val == true) {
-                                                    final id = data["id"]?.toString();
-                                                    if (id != null) await tandaiLunas(id, data);
-                                                  }
-                                                },
+                                          onChanged: (val) async {
+                                            final id = data["id"]?.toString();
+                                            if (id == null) return;
+                                            if (val == true) {
+                                              await tandaiLunas(id, data);
+                                            } else {
+                                              await tandaiBelumLunas(id);
+                                            }
+                                            setState(() {});
+                                          },
                                           activeColor: primaryGreen,
                                         ),
                                         const SizedBox(width: 8),
+                                        // TOMBOL PDF SELALU TAMPIL
                                         IconButton(
                                           icon: const Icon(Icons.picture_as_pdf, color: Colors.blue),
                                           onPressed: () => cetakStrukPDF(data),

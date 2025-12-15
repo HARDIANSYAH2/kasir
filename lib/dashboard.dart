@@ -275,8 +275,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
       case DashboardMenu.kelolaPesanan:
         return KelolaPesananContent(
-          lapanganDipilih: lapanganDipilih,
-          onBookingSelesai: _refreshLapangan,
         );
 
       case DashboardMenu.cetakLaporan:
@@ -284,9 +282,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // ============================================================================  
-  // =============================== CARD LAPANGAN ==============================  
-  // ============================================================================  
+ 
   Widget _lapanganCard(Map<String, dynamic> item) {
     final bool available =
         (item["status"]?.toString().toLowerCase() ?? "") == "tersedia";
